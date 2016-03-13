@@ -30,7 +30,18 @@ try {
 }`.red)
 }
 const reddit = new Reddit(credentials)
-reddit.connect()
+const entry = async (f) => {
+  await reddit.connect()
+  if (lastParsedCommentName) {
+    const query = {after: lastParsedCommentName}
+    let response = await reddit.query(`/r/changemyview/comments?${stringify(query)}`)
+    if (!response.data.children.length) {
+      lastParsedCommentName = null
+      await fs.writeFile('./state.json', '{}')
+      console.log('something up with lastparsedcommend. Removed')
+    }
+  }
+};entry()
 
 router.get('/getNewComments', async (ctx, next) => {
   let getNewComments = async (recursiveList) => {
@@ -49,19 +60,23 @@ router.get('/getNewComments', async (ctx, next) => {
         return await getNewComments(recursiveList)
       case (commentEntriesLength !== 25):
       case (commentEntriesLength === 0):
-        console.log('NO MORE'.red)
         return recursiveList
     }
   }
-  let comments = await getNewComments()
-  _.each(comments, (entry, index) => {
-    const { link_title, link_id, author, body, body_html, edited, parent_id, name, author_flair_text, link_url, created_utc, created } = entry.data
-    comments[index] = { link_title, link_id, author, body, body_html, edited, parent_id, name, author_flair_text, link_url, created_utc, created }
-    const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
-    if (!!removedBodyHTML.match(/∆|!delta/)) verifyThenAward(comments[index])
-  })
-  let body = comments
-  ctx.body = body
+  try {
+    let comments = await getNewComments()
+    _.each(comments, (entry, index) => {
+      const { link_title, link_id, author, body, body_html, edited, parent_id, name, author_flair_text, link_url, created_utc, created } = entry.data
+      comments[index] = { link_title, link_id, author, body, body_html, edited, parent_id, name, author_flair_text, link_url, created_utc, created }
+      const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
+      if (!!removedBodyHTML.match(/∆|!delta/)) verifyThenAward(comments[index])
+    })
+    let body = comments
+    ctx.body = body
+  } catch (err) {
+    console.log('Error!'.red)
+    ctx.body = err
+  }
   await next()
 })
 router.get('/dynamic/*', async (ctx, next) => {

@@ -47,6 +47,7 @@ module.exports = class RedditAPIDriver {
   async getNewSession() {
   }
   async query(URL) {
+    console.log(`REDDITAPI: QUERYING: ${URL}`.yellow)
     try {
       const headers = this.headers
       let response = await fetch(`${this.baseURL}${URL}`, { headers })
