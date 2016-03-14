@@ -16,7 +16,7 @@ const router = new Router()
 const fs = require('fs')
 fs.writeFile = promisify(fs.writeFile)
 let state = require('./state.json')
-let lastParsedCommentName = state.lastParsedCommentName || null
+let lastParsedCommentID = state.lastParsedCommentID || null
 console.log(`server.js called!`.gray)
 try {
   var credentials = require('./credentials')
@@ -32,11 +32,11 @@ try {
 const reddit = new Reddit(credentials)
 const entry = async (f) => {
   await reddit.connect()
-  if (lastParsedCommentName) {
-    const query = {after: lastParsedCommentName}
+  if (lastParsedCommentID) {
+    const query = {after: lastParsedCommentID}
     let response = await reddit.query(`/r/changemyview/comments?${stringify(query)}`)
     if (!response.data.children.length) {
-      lastParsedCommentName = null
+      lastParsedCommentID = null
       await fs.writeFile('./state.json', '{}')
       console.log('something up with lastparsedcommend. Removed')
     }
@@ -47,13 +47,13 @@ router.get('/getNewComments', async (ctx, next) => {
   let getNewComments = async (recursiveList) => {
     recursiveList = recursiveList || []
     let query = {}
-    if (lastParsedCommentName) query.before = lastParsedCommentName
+    if (lastParsedCommentID) query.before = lastParsedCommentID
     let response = await reddit.query(`/r/changemyview/comments?${stringify(query)}`)
     recursiveList = recursiveList.concat(response.data.children)
     const commentEntriesLength = response.data.children.length
     if (commentEntriesLength) {
-      lastParsedCommentName = response.data.children[0].data.name
-      await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentName }, null, 2))
+      lastParsedCommentID = response.data.children[0].data.name
+      await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentID }, null, 2))
     }
     switch (true) {
       case (commentEntriesLength === 25):
