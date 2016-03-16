@@ -69,7 +69,7 @@ router.get('/getNewComments', async (ctx, next) => {
       const { link_title, link_id, author, body, body_html, edited, parent_id, name, author_flair_text, link_url, created_utc, created } = entry.data
       comments[index] = { link_title, link_id, author, body, body_html, edited, parent_id, name, author_flair_text, link_url, created_utc, created }
       const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
-      if (!!removedBodyHTML.match(/∆|!delta/)) verifyThenAward(comments[index])
+      if (!!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) verifyThenAward(comments[index])
     })
     let body = comments
     ctx.body = body
