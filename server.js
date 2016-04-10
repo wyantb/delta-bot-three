@@ -13,7 +13,11 @@ import Reddit from './RedditAPIDriver'
 import { stringify } from 'query-string'
 const dev = true
 let subreddit = 'changemyview'
-if (dev) subreddit = 'changemyviewDB3Dev'
+let botUsername = 'DeltaBot'
+if (dev) {
+  subreddit = 'changemyviewDB3Dev'
+  botUsername = 'DeltaBot3'
+}
 const app = new Koa()
 const router = new Router()
 const fs = require('fs')
@@ -84,12 +88,13 @@ router.get('/getNewComments', async (ctx, next) => {
 })
 router.get('/dynamic/*', async (ctx, next) => {
   let response = await reddit.query(`/${ctx.params['0']}?${stringify(ctx.query)}`)
-/*  const { after, before, children } = response.data
-  _.each(children, (entry, index) => {
-    const { link_title, link_id, author, body, edited, parent_id, name, author_flair_text, link_url, created_utc, created } = entry.data
-    children[index] = { link_title, link_id, author, body, edited, parent_id, name, author_flair_text, link_url, created_utc, created }
-  })
-  let body = { after, before, children }*/
+  if (ctx.params['0'].indexOf(`r/${subreddit}/comments`) + 1) {
+    const { children } = response.data
+    _.each(children, (entry, index) => {
+      const { link_title, link_id, author, body, edited, parent_id, name, author_flair_text, link_url, created_utc, created } = entry.data
+      children[index] = { link_title, link_id, author, body, edited, parent_id, name, author_flair_text, link_url, created_utc, created }
+    })
+  }
   ctx.body = response
   await next()
 })
@@ -110,8 +115,8 @@ const verifyThenAward = async ({ author, body, link_id: linkID, parent_id: paren
   let response = await reddit.query(`/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`)
   let json = await response.json()
   let parentComment = json[1].data.children[0].data
-  if (json.author === 'DeltaBot') {
-    console.log('BAILOUT parent author is DeltaBot')
+  if (json.author === botUsername) {
+    console.log(`BAILOUT parent author is ${botUsername}`)
     console.log(json.author)
     return
   }
