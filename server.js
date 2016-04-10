@@ -11,6 +11,9 @@ import Koa from 'koa'
 import Router from 'koa-router'
 import Reddit from './RedditAPIDriver'
 import { stringify } from 'query-string'
+const dev = true
+let subreddit = 'changemyview'
+if (dev) subreddit = 'changemyviewDB3Dev'
 const app = new Koa()
 const router = new Router()
 const fs = require('fs')
@@ -34,7 +37,7 @@ const entry = async (f) => {
   await reddit.connect()
   if (lastParsedCommentID) {
     const query = {after: lastParsedCommentID}
-    let response = await reddit.query(`/r/changemyview/comments?${stringify(query)}`)
+    let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
     if (!response.data.children.length) {
       lastParsedCommentID = null
       await fs.writeFile('./state.json', '{}')
@@ -48,7 +51,7 @@ router.get('/getNewComments', async (ctx, next) => {
     recursiveList = recursiveList || []
     let query = {}
     if (lastParsedCommentID) query.before = lastParsedCommentID
-    let response = await reddit.query(`/r/changemyview/comments?${stringify(query)}`)
+    let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
     recursiveList = recursiveList.concat(response.data.children)
     const commentEntriesLength = response.data.children.length
     if (commentEntriesLength) {
@@ -104,7 +107,7 @@ const verifyThenAward = async ({ author, body, link_id: linkID, parent_id: paren
     console.log(body.length)
     return
   }
-  let response = await reddit.query(`/r/changemyview/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`)
+  let response = await reddit.query(`/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`)
   let json = await response.json()
   let parentComment = json[1].data.children[0].data
   if (json.author === 'DeltaBot') {
