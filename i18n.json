@@ -1,0 +1,13 @@
+{
+  "en-us": {
+    "awardDelta": "Confirmed: 1 delta awarded to /u/USERNAME. ^[[History](/r/changemyview/wiki/user/USERNAME)]",
+    "noAward": {
+      "littleText": "This delta is currently disallowed as your comment contains either no or little text ([comment rule 4](http://www.reddit.com/r/changemyview/wiki/rules#wiki_rule_4)). Please include an explanation for how /u/PARENTUSERNAME changed your view. If you edit this in, replying to my comment will make me rescan yours.",
+      "op": "You cannot award OP a delta as the moderators feel that allowing so would send the wrong message. If you were trying show the OP how to award a delta, please do so without using the delta symbol unless it's included in a reddit quote.",
+      "db3": "You cannot award DeltaBot a delta.",
+      "self": "You cannot award yourself a delta.",
+      "issueCount": "You have ISSUECOUNT issues with your delta."
+    },
+    "global": "\n\n^[[Wiki](http://www.reddit.com/r/changemyview/wiki/deltabot)][[Code](https://github.com/MystK/delta-bot-three/)][/r/DeltaBot3]"
+  }
+}

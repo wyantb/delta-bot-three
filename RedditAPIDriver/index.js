@@ -46,19 +46,19 @@ module.exports = class RedditAPIDriver {
   }
   async getNewSession() {
   }
-  async query(URL) {
-    console.log(`REDDITAPI: QUERYING: ${URL}`.yellow)
-    try {
-      const headers = this.headers
-      let response = await fetch(`${this.baseURL}${URL}`, { headers })
-      let statusCode = response.status
-      if (statusCode == 200) return await response.json()
-      else if (statusCode == 401) {
-        await this.connect({type: 'GET_NEW_SESSION'})
-        return await this.query(URL)
-      } else return await response.text()
-    } catch (err) {
-      return err.message
-    }
+  async query(params) {
+    if (typeof params === 'string') {
+      var URL = params
+      var method = 'GET'
+    } else var { URL, method } = params
+    console.log(`REDDITAPI: QUERYING: ${method} ${URL}`.yellow)
+    const headers = this.headers
+    let response = await fetch(`${this.baseURL}${URL}`, { headers, method })
+    let statusCode = response.status
+    if (statusCode == 200) return await response.json()
+    else if (statusCode == 401) {
+      await this.connect({type: 'GET_NEW_SESSION'})
+      return await this.query(URL)
+    } else return await response.text()
   }
 }
