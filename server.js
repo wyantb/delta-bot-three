@@ -164,10 +164,10 @@ const verifyThenAward = async ({ author, body, link_id: linkID, name, parent_id:
       query.text += text
       ++issueCount
     }
-    if (!('text' in query)) {
+    if (issueCount === 0) {
       console.log('THIS ONE IS GOOD. AWARD IT')
       let text = i18n[locale].awardDelta
-      text = text.replace(/USERNAME/g, author)
+      text = text.replace(/USERNAME/g, parentThing.author)
       if (query.text.length) query.text += '\n\n'
       query.text += text
     }
