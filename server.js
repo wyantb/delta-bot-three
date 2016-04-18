@@ -123,6 +123,22 @@ router.get('/dynamic/*', async (ctx, next) => {
   await next()
 })
 
+const bumpFlairCount = async ({ name }) => {
+  const flair = await getFlair({ name })
+  if (flair) var newFlairCount = (+flair.slice(0,-1)) + 1
+  else newFlairCount = 1
+  const flairQuery = {
+    name: name,
+    text: newFlairCount + '∆'
+  }
+  reddit.query({ URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' })
+}
+
+const getFlair = async ({ name }) => {
+  const res = await reddit.query({ URL: `/r/${subreddit}/api/flairlist?${stringify({ name })}` })
+  return res.users[0].flair_text
+}
+
 const verifyThenAward = async ({ author, body, link_id: linkID, name, parent_id: parentID }) => {
   try {
     console.log( author, body, linkID, parentID )
@@ -170,13 +186,13 @@ const verifyThenAward = async ({ author, body, link_id: linkID, name, parent_id:
       text = text.replace(/USERNAME/g, parentThing.author)
       if (query.text.length) query.text += '\n\n'
       query.text += text
-    }
-    query.text += `\n\n${i18n[locale].global}`
-    if (issueCount >= 2) {
+      await bumpFlairCount({ name: author })
+    } else if (issueCount >= 2) {
       let text = i18n[locale].noAward.issueCount
       text = text.replace(/ISSUECOUNT/g, issueCount)
       query.text = `${text}\n\n${query.text}`
     }
+    query.text += `\n\n${i18n[locale].global}`
     await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
   } catch (err) {
     console.log(err)
