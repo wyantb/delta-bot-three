@@ -8,6 +8,7 @@
       "self": "You cannot award yourself a delta.",
       "issueCount": "You have ISSUECOUNT issues with your delta."
     },
-    "global": "\n\n^[[Wiki](http://www.reddit.com/r/changemyview/wiki/deltabot)][[Code](https://github.com/MystK/delta-bot-three/)][/r/DeltaBot3]"
+    "global": "\n\n^[[Wiki](http://www.reddit.com/r/changemyview/wiki/deltabot)][[Code](https://github.com/MystK/delta-bot-three/)][/r/DeltaBot3]",
+    "hiddenParamsComment": "This is hidden text for DB3 to parse. Please contact the author of DB3 if you see this"
   }
 }

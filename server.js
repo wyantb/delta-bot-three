@@ -139,47 +139,59 @@ const getFlair = async ({ name }) => {
   return res.users[0].flair_text
 }
 
+const parseHiddenParams = comment => {
+  const hiddenSection = comment.match(/DB3PARAMSSTART.+DB3PARAMSEND/)[0]
+  const stringParams = hiddenSection.slice('DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length)
+  params = JSON.parse(stringHiddenParams)
+  return params
+}
+
 const verifyThenAward = async ({ author, body, link_id: linkID, name, parent_id: parentID }) => {
   try {
     console.log( author, body, linkID, parentID )
+    const hiddenParams = {
+      comment: i18n[locale].hiddenParamsComment,
+      issues: {},
+    }
+    let issues = hiddenParams.issues
     let query = {
       parent: name,
       text: ''
     }
-    let issueCount = 0
     let json = await reddit.query(`/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`)
     let parentThing = json[1].data.children[0].data
     if (!parentID.match(/^t1_/g)) {
       parentThing = json[0].data.children[0].data
       console.log('BAILOUT delta tried to be awarded to listing')
       console.log(parentID)
-      let text = i18n[locale].noAward.op
+      let text = i18n[locale].noAward['op']
+      issues['op'] = 1
       if (query.text.length) query.text += '\n\n'
       query.text += text
-      ++issueCount
     }
     if (body.length < 50) {
       console.log(`BAILOUT body length, ${body.length}, is shorter than 50`)
-      let text = i18n[locale].noAward.littleText
+      let text = i18n[locale].noAward['littleText']
+      issues['littleText'] = 1
       text = text.replace(/PARENTUSERNAME/g, parentThing.author)
       if (query.text.length) query.text += '\n\n'
       query.text += text
-      ++issueCount
     }
     if (parentThing.author === botUsername) {
       console.log(`BAILOUT parent author, ${parentThing.author} is bot, ${botUsername}`)
-      let text = i18n[locale].noAward.db3
+      let text = i18n[locale].noAward['db3']
+      issues['db3'] = 1
       if (query.text.length) query.text += '\n\n'
       query.text += text
-      ++issueCount
     }
     if (parentThing.author === author) {
       console.log(`BAILOUT parent author, ${parentThing.author} is author, ${author}`)
-      let text = i18n[locale].noAward.self
+      let text = i18n[locale].noAward['self']
+      issues['self'] = 1
       if (query.text.length) query.text += '\n\n'
       query.text += text
-      ++issueCount
     }
+    let issueCount = Object.keys(issues).length
     if (issueCount === 0) {
       console.log('THIS ONE IS GOOD. AWARD IT')
       let text = i18n[locale].awardDelta
@@ -192,7 +204,7 @@ const verifyThenAward = async ({ author, body, link_id: linkID, name, parent_id:
       text = text.replace(/ISSUECOUNT/g, issueCount)
       query.text = `${text}\n\n${query.text}`
     }
-    query.text += `\n\n${i18n[locale].global}`
+    query.text += `\n\n${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
   } catch (err) {
     console.log(err)
