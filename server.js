@@ -204,7 +204,7 @@ const verifyThenAward = async ({ author, body, link_id: linkID, name, parent_id:
       text = text.replace(/ISSUECOUNT/g, issueCount)
       query.text = `${text}\n\n${query.text}`
     }
-    query.text += `\n\n${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
+    query.text += `${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
   } catch (err) {
     console.log(err)
