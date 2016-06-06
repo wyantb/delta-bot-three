@@ -1,6 +1,6 @@
 {
   "en-us": {
-    "awardDelta": "Confirmed: 1 delta awarded to /u/USERNAME. ^[[History](/r/changemyview/wiki/user/USERNAME)]",
+    "awardDelta": "Confirmed: 1 delta awarded to /u/USERNAME. ^[[History](/r/SUBREDDIT/wiki/user/USERNAME)]",
     "noAward": {
       "littleText": "This delta has been rejected. The length of your comment suggests that you haven't explained how /u/username changed your view (comment rule 4). Please edit your comment and include a short explanation - it will be automatically re-scanned.",
       "op": "You cannot award OP a delta as the moderators feel that allowing so would send the wrong message. If you were trying show the OP how to award a delta, please do so without using the delta symbol unless it's included in a reddit quote.",

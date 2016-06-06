@@ -190,7 +190,7 @@ const verifyThenAward = async ({ author, body, link_id: linkID, link_title: link
     if (issueCount === 0) {
       console.log('THIS ONE IS GOOD. AWARD IT')
       let text = i18n[locale].awardDelta
-      text = text.replace(/USERNAME/g, parentThing.author)
+      text = text.replace(/USERNAME/g, parentThing.author).replace(/SUBREDDIT/g, subreddit)
       if (query.text.length) query.text += '\n\n'
       query.text += text
       const flairCount = await bumpFlairCount({ name: parentThing.author })
