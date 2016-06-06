@@ -180,11 +180,13 @@ const verifyThenAward = async ({ author, body, link_id: linkID, link_title: link
       query.text += text
     }
     if (parentThing.author === author) {
-      console.log(`BAILOUT parent author, ${parentThing.author} is author, ${author}`)
-      let text = i18n[locale].noAward['self']
-      issues['self'] = 1
-      if (query.text.length) query.text += '\n\n'
-      query.text += text
+      if (author !== 'MystK') {
+        console.log(`BAILOUT parent author, ${parentThing.author} is author, ${author}`)
+        let text = i18n[locale].noAward['self']
+        issues['self'] = 1
+        if (query.text.length) query.text += '\n\n'
+        query.text += text
+      }
     }
     let issueCount = Object.keys(issues).length
     if (issueCount === 0) {
