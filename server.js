@@ -214,7 +214,7 @@ app
   })
   .use(router.routes())
   .use(router.allowedMethods())
-  .listen(80)
+  .listen(6969)
 
 setInterval(checkForDeltas, 5000)
 
