@@ -14,7 +14,7 @@ import i18n from './i18n'
 import { stringify } from 'query-string'
 import fetch from 'node-fetch'
 let locale = 'en-us'
-const dev = true
+const dev = false
 let subreddit = 'changemyview'
 let botUsername = 'DeltaBot'
 if (dev) {
@@ -130,7 +130,7 @@ const bumpFlairCount = async ({ name }) => {
 }
 
 const getFlair = async ({ name }) => {
-  const res = await reddit.query({ URL: `/r/${subreddit}/api/flairlist?${stringify({ name })}` })
+  const res = await reddit.query(`/r/${subreddit}/api/flairlist?${stringify({ name })}`)
   return res.users[0].flair_text
 }
 

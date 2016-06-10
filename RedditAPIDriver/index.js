@@ -30,7 +30,7 @@ module.exports = class RedditAPIDriver {
       try {
         var json = JSON.parse(await fs.readFile('session.json', 'utf-8'))
       } catch (err) {
-        this.connect({type:'GET_NEW_SESSION'})
+        return this.connect({type:'GET_NEW_SESSION'})
       }
     } else throw Error('This should never happen. Unhandled type for RedditAPIDriver.connect()')
     console.log('Getting session token!'.yellow)
