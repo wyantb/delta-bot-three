@@ -59,7 +59,6 @@ const getNewComments = async (recursiveList) => {
     query = { after: lastParsedCommentID }
     let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
     while (!response.data.children.length && lastParsedCommentIDs.length) {
-      console.error('here')
       lastParsedCommentID = lastParsedCommentIDs.shift()
       query = { after: lastParsedCommentID }
       response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
@@ -71,7 +70,6 @@ const getNewComments = async (recursiveList) => {
     }
     await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
     if (lastParsedCommentIDs.length === 0) {
-      console.error('here2')
       lastParsedCommentID = null
       await fs.writeFile('./state.json', '{}')
 
