@@ -14,19 +14,13 @@ import i18n from './i18n'
 import { stringify } from 'query-string'
 import fetch from 'node-fetch'
 let locale = 'en-us'
-const dev = false
-let subreddit = 'changemyview'
-let botUsername = 'DeltaBot'
-if (dev) {
-  subreddit = 'changemyviewDB3Dev'
-  botUsername = 'DeltaBot3'
-}
 const app = new Koa()
 const router = new Router()
 const fs = require('fs')
 fs.writeFile = promisify(fs.writeFile)
 let state = require('./state.json')
-let lastParsedCommentID = state.lastParsedCommentID || null
+let lastParsedCommentIDs = state.lastParsedCommentIDs || []
+let lastParsedCommentID = lastParsedCommentIDs[0] || null
 console.log(`server.js called!`.gray)
 try {
   var credentials = require('./credentials')
@@ -39,30 +33,71 @@ try {
   "clientSecret": "Your application secret"
 }`.red)
 }
+
+const dev = false
+let subreddit = 'changemyview'
+let botUsername = credentials.username
+if (dev) subreddit = 'changemyviewDB3Dev'
+
 const reddit = new Reddit(credentials)
 const entry = async (f) => {
   await reddit.connect()
-  if (lastParsedCommentID) {
-    const query = {after: lastParsedCommentID}
-    let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
-    if (!response.data.children.length) {
-      lastParsedCommentID = null
-      await fs.writeFile('./state.json', '{}')
-      console.log('something up with lastparsedcommend. Removed')
+  if (!lastParsedCommentID) {
+    let response = await reddit.query(`/r/${subreddit}/comments`)
+    for (let i = 0; i < 5; ++i) {
+      lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
     }
+    await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+    lastParsedCommentID = lastParsedCommentIDs[0]
   }
 };entry()
 
 const getNewComments = async (recursiveList) => {
   recursiveList = recursiveList || []
   let query = {}
-  if (lastParsedCommentID) query.before = lastParsedCommentID
+  if (lastParsedCommentID) {
+    query = { after: lastParsedCommentID }
+    let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
+    while (!response.data.children.length && lastParsedCommentIDs.length) {
+      console.error('here')
+      lastParsedCommentID = lastParsedCommentIDs.shift()
+      query = { after: lastParsedCommentID }
+      response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
+    }
+    lastParsedCommentIDs = []
+    lastParsedCommentIDs.push(lastParsedCommentID)
+    for (let i = 0; i < 4; ++i) {
+      lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
+    }
+    await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+    if (lastParsedCommentIDs.length === 0) {
+      console.error('here2')
+      lastParsedCommentID = null
+      await fs.writeFile('./state.json', '{}')
+
+      let response = await reddit.query(`/r/${subreddit}/comments`)
+      for (let i = 0; i < 5; ++i) {
+        lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
+      }
+      await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+      lastParsedCommentID = lastParsedCommentIDs[0]
+
+    }
+  }
+  query = { before: lastParsedCommentID }
   let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
   recursiveList = recursiveList.concat(response.data.children)
   const commentEntriesLength = response.data.children.length
   if (commentEntriesLength) {
     lastParsedCommentID = response.data.children[0].data.name
-    await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentID }, null, 2))
+    lastParsedCommentIDs = []
+    query = { after: lastParsedCommentID }
+    response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
+    lastParsedCommentIDs.push(lastParsedCommentID)
+    for (let i = 0; i < 4; ++i) {
+      lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
+    }
+    await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
   }
   switch (true) {
     case (commentEntriesLength === 25):
@@ -84,7 +119,7 @@ const checkForDeltas = async () => {
     })
   } catch (err) {
     console.log('Error!'.red)
-    err
+    console.error(err)
   }
 }
 
