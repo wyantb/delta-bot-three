@@ -51,7 +51,7 @@ module.exports = class RedditAPIDriver {
       var URL = params
       var method = 'GET'
     } else var { URL, method } = params
-    console.log(`REDDITAPI: QUERYING: ${method} ${URL}`.yellow)
+    if (URL.indexOf('/comments') === -1) console.log(`REDDITAPI: QUERYING: ${method} ${URL}`.yellow)
     const headers = this.headers
     let response = await fetch(`${this.baseURL}${URL}`, { headers, method })
     let statusCode = response.status
