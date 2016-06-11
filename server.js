@@ -281,7 +281,7 @@ const addDeltaToWiki = async ({ user, linkTitle, id, linkURL, author, flairCount
         /\/u\/\S+ has received \d+ delta[s()]* for the following comments:/,
         `/u/${user} has received ${flairCount} delta(s) for the following comments:`
       )
-      if (content.indexOf(`| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |`) > -1) {
+      if (content.indexOf(`| --- | :-: | --- | --- |`) > -1) {
         query.content = content
         .replace(
           '| --- | :-: | --- | --- |',
