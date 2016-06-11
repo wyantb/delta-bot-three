@@ -251,7 +251,7 @@ app
   .use(router.allowedMethods())
   .listen(6969)
 
-setInterval(checkForDeltas, 5000)
+setInterval(checkForDeltas, 10000)
 
 const getWikiContent = async user => {
   try {
