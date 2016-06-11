@@ -274,11 +274,13 @@ const addDeltaToWiki = async ({ user, linkTitle, id, linkURL, author, flairCount
       page: `user/${user}`,
       reason: 'Added Delta',
     }
-    if (content.indexOf(`/u/${user} has received `) === -1) {
+    const hasReceivedSearch = content.match(/\/u\/\S+ has received \d+ delta[s()]* for the following comments:/)
+    if (!hasReceivedSearch) {
       query.content = `/u/${user} has received ${flairCount} delta(s) for the following comments:\r\n\r\n${content}\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n${newRow}`
     } else {
+      const exactString = hasReceivedSearch[0]
       content = content.replace(
-        /\/u\/\S+ has received \d+ delta[s()]* for the following comments:/,
+        exactString,
         `/u/${user} has received ${flairCount} delta(s) for the following comments:`
       )
       if (content.indexOf(`| --- | :-: | --- | --- |`) > -1) {
