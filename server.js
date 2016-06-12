@@ -1,6 +1,5 @@
 /*
 Corner Cases
-Deleted comments are affecting the get new comment
 Edited comments are not handled
 */
 
@@ -34,7 +33,11 @@ try {
 }`.red)
 }
 
-const dev = false
+const headers = {
+  'user-agent': `DB3/1.0.0 by MystK`
+}
+
+const dev = true
 let subreddit = 'changemyview'
 let botUsername = credentials.username
 if (dev) subreddit = 'changemyviewDB3Dev'
@@ -167,14 +170,56 @@ const getFlair = async ({ name }) => {
   return res.users[0].flair_text
 }
 
-const parseHiddenParams = comment => {
-  const hiddenSection = comment.match(/DB3PARAMSSTART.+DB3PARAMSEND/)[0]
-  const stringParams = hiddenSection.slice('DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length)
-  params = JSON.parse(stringHiddenParams)
-  return params
+const parseHiddenParams = string => {
+  try {
+    const hiddenSection = string.match(/DB3PARAMSSTART.+DB3PARAMSEND/)[0]
+    const stringParams = hiddenSection.slice('DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length)
+    params = JSON.parse(stringHiddenParams)
+    return params
+  } catch (error) {
+    return false
+  }
 }
 
-const verifyThenAward = async ({ author, body, link_id: linkID, link_title: linkTitle, link_url: linkURL, id, name, parent_id: parentID }) => {
+const createWikiHiddenParams = async content => {
+  try {
+    const hiddenParams = {
+      comment: i18n[locale].hiddenParamsComment,
+      deltas: [],
+    }
+    let links = content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+\?context=2`, 'g'))
+    links = _.uniq(links)
+    await new Promise(async (res, rej) => {
+      _.forEach(links, async link => {
+        const deltaCommentwContext = link.match(/[0-9a-z]+\?context=2/)[0]
+        const deltaComment = deltaCommentwContext.replace('?context=2', '')
+        const base = link.replace(deltaCommentwContext, '')
+        let response = await reddit.query(`${base}${deltaComment}`)
+        const title = _.get(response, '[0].data.children[0].data.title')
+        const awardedBy = _.get(response, '[1].data.children[0].data.author')
+        const unixUTC = _.get(response, '[1].data.children[0].data.created_utc')
+        const params = {
+          b: base,
+          dc: deltaComment,
+          t: title,
+          ab: awardedBy,
+          uu: unixUTC,
+        }
+        hiddenParams.deltas.push(params)
+        if (hiddenParams.deltas.length === links.length) res()
+      })
+      setTimeout(() => rej(), 60000)
+    })
+    hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
+    return hiddenParams
+  } catch (err) {
+    console.log('90')
+    console.log(err)
+  }
+}
+
+const verifyThenAward = async comment => {
+  const { created_utc: createdUTC, author, body, link_id: linkID, link_title: linkTitle, link_url: linkURL, id, name, parent_id: parentID } = comment
   try {
     console.log( author, body, linkID, parentID )
     const hiddenParams = {
@@ -229,7 +274,7 @@ const verifyThenAward = async ({ author, body, link_id: linkID, link_title: link
       if (query.text.length) query.text += '\n\n'
       query.text += text
       const flairCount = await bumpFlairCount({ name: parentThing.author })
-      await addDeltaToWiki({ user: parentThing.author, id, linkTitle, linkURL, author, flairCount })
+      await addDeltaToWiki({ user: parentThing.author, id, linkTitle, linkURL, author, flairCount, createdUTC })
     } else if (issueCount >= 2) {
       let text = i18n[locale].noAward.issueCount
       text = text.replace(/ISSUECOUNT/g, issueCount)
@@ -253,9 +298,9 @@ app
 
 setInterval(checkForDeltas, 10000)
 
-const getWikiContent = async user => {
+const getWikiContent = async url => {
   try {
-    const resp = await fetch(`https://www.reddit.com/r/${subreddit}/wiki/user/${user}`)
+    const resp = await fetch(`https://www.reddit.com/r/${subreddit}/wiki/${url}`, { headers })
     const text = await resp.text()
     return text.match(/<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/)[0].replace(/<textarea readonly class="source" rows="20" cols="20">|<\/textarea>/g, '')
   } catch (err) {
@@ -263,58 +308,35 @@ const getWikiContent = async user => {
   }
 }
 
-const addDeltaToWiki = async ({ user, linkTitle, id, linkURL, author, flairCount }) => {
-  let content = await getWikiContent(user)
-  const now = new Date()
-  const [month, day, year] = [now.getMonth() + 1, now.getDate(), now.getFullYear()]
-  const newRow = `|${month}/${day}/${year}|[${linkTitle}](${linkURL})|[Link](${linkURL}${id}?context=2)|/u/${author}|`
-  let query
-  if (content) {
-    query = {
-      page: `user/${user}`,
-      reason: 'Added Delta',
-    }
-    const hasReceivedSearch = content.match(/\/u\/\S+ has received \d+ delta[s()]* for the following comments:/)
-    if (!hasReceivedSearch) {
-      query.content = `/u/${user} has received ${flairCount} delta(s) for the following comments:\r\n\r\n${content}\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n${newRow}`
-    } else {
-      const exactString = hasReceivedSearch[0]
-      content = content.replace(
-        exactString,
-        `/u/${user} has received ${flairCount} delta(s) for the following comments:`
-      )
-      if (content.indexOf(`| --- | :-: | --- | --- |`) > -1) {
-        query.content = content
-        .replace(
-          '| --- | :-: | --- | --- |',
-          `| --- | :-: | --- | --- |\r\n${newRow}`
-        )
-      } else {
-        const pastString = `Any delta history before February 2015 can be found at: /r/ChangeMyView/wiki/userhistory/user/${user}`
-        let lengthToSlice = content.indexOf(content.indexOf(pastString)) + 1
-        if (lengthToSlice > 0) {
-          lengthToSlice += lengthToSlice.length
-          const startContent = content.slice(0, lengthToSlice)
-          const endContent = content.slice(lengthToSlice)
-          query.content = content.replace(
-            `Any delta history before February 2015 can be found at: /r/ChangeMyView/wiki/userhistory/user/${user}`,
-            `Any delta history before February 2015 can be found at: /r/ChangeMyView/wiki/userhistory/user/${user}\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n${newRow}`
-          )
-        } else {
-          query.content = content.replace(
-            `/u/${user} has received ${flairCount} delta(s) for the following comments:`,
-            `/u/${user} has received ${flairCount} delta(s) for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n${newRow}`
-          )
-        }
-      }
-    }
-  } else { // make wiki page
-    query = {
-      page: `user/${user}`,
-      reason: 'Created delta history page with first delta',
-      content: `/u/${user} has received ${flairCount} delta(s) for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n${newRow}`
-    }
+const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author, flairCount }) => {
+  let content = await getWikiContent(`user/${user}`)
+  // First, find all wiki pages and combine for parsing
+  if (content && content.indexOf('Any delta history before February 2015 can be found at') > -1) {
+    const oldContent = await getWikiContent(`userhistory/user/${user}`)
+    content += oldContent
   }
-  await reddit.query({ URL: `/r/${subreddit}/api/wiki/edit?${stringify(query)}`, method: 'POST' })
-  return true
+  // Look for hidden params. If not there, create
+  let hiddenParams = parseHiddenParams(content) || await createWikiHiddenParams(content)
+  hiddenParams.deltas.push({
+    b: linkURL,
+    dc: id,
+    t: linkTitle,
+    ab: author,
+    uu: createdUTC,
+  })
+  let newContent = `[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)\r\n/u/${user} has received ${flairCount} delta(s) for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n`
+  _.forEachRight(hiddenParams.deltas, col => {
+    const { b, dc, t, ab, uu } = col
+    const date = new Date(uu * 1000)
+    const [month, day, year] = [date.getMonth() + 1, date.getDate(), date.getFullYear()]
+    const newRow = `|${month}/${day}/${year}|[${t}](${b})|[Link](${b}${dc}?context=2)|/u/${ab}|\r\n`
+    newContent += newRow
+    process.stdout.write('!')
+  })
+  const query = {
+    page: `user/${user}`,
+    reason: 'Added a delta',
+    content: newContent
+  }
+  let response = await reddit.query({ URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(query) })
 }
