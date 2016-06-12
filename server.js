@@ -61,10 +61,12 @@ const getNewComments = async (recursiveList) => {
   if (lastParsedCommentID) {
     query = { after: lastParsedCommentID }
     let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
+    if (response.error) throw Error(response.error)
     while (!response.data.children.length && lastParsedCommentIDs.length) {
       lastParsedCommentID = lastParsedCommentIDs.shift()
       query = { after: lastParsedCommentID }
       response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
+      if (response.error) throw Error(response.error)
     }
     lastParsedCommentIDs = []
     lastParsedCommentIDs.push(lastParsedCommentID)
@@ -77,6 +79,7 @@ const getNewComments = async (recursiveList) => {
       await fs.writeFile('./state.json', '{}')
 
       let response = await reddit.query(`/r/${subreddit}/comments`)
+      if (response.error) throw Error(response.error)
       for (let i = 0; i < 5; ++i) {
         lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
       }
@@ -87,6 +90,7 @@ const getNewComments = async (recursiveList) => {
   }
   query = { before: lastParsedCommentID }
   let response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
+  if (response.error) throw Error(response.error)
   recursiveList = recursiveList.concat(response.data.children)
   const commentEntriesLength = response.data.children.length
   if (commentEntriesLength) {
@@ -94,6 +98,7 @@ const getNewComments = async (recursiveList) => {
     lastParsedCommentIDs = []
     query = { after: lastParsedCommentID }
     response = await reddit.query(`/r/${subreddit}/comments?${stringify(query)}`)
+    if (response.error) throw Error(response.error)
     lastParsedCommentIDs.push(lastParsedCommentID)
     for (let i = 0; i < 4; ++i) {
       lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
@@ -151,6 +156,7 @@ router.get('/checkForDeltas', async (ctx, next) => {
 })
 router.get('/dynamic/*', async (ctx, next) => {
   let response = await reddit.query(`/${ctx.params['0']}?${stringify(ctx.query)}`)
+  if (response.error) throw Error(response.error)
   ctx.body = response
   await next()
 })
@@ -164,6 +170,7 @@ const bumpFlairCount = async ({ name }) => {
     text: newFlairCount + '∆'
   }
   await reddit.query({ URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' })
+  if (response.error) throw Error(response.error)
   return newFlairCount
 }
 
@@ -198,6 +205,7 @@ const createWikiHiddenParams = async content => {
           const deltaComment = deltaCommentwContext.replace('?context=2', '')
           const base = link.replace(deltaCommentwContext, '')
           let response = await reddit.query(`${base}${deltaComment}`)
+          if (response.error) throw Error(response.error)
           const title = _.get(response, '[0].data.children[0].data.title').replace(')', '\)')
           const awardedBy = _.get(response, '[1].data.children[0].data.author')
           const unixUTC = _.get(response, '[1].data.children[0].data.created_utc')
@@ -236,6 +244,7 @@ const verifyThenAward = async comment => {
       text: ''
     }
     let json = await reddit.query(`/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`)
+    if (json.error) throw Error(json.error)
     let parentThing = json[1].data.children[0].data
     if (!parentID.match(/^t1_/g)) {
       parentThing = json[0].data.children[0].data
@@ -285,7 +294,8 @@ const verifyThenAward = async comment => {
       query.text = `${text}\n\n${query.text}`
     }
     query.text += `${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
-    await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
+    let send = await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
+    if (send.error) throw Error(send.error)
     return true
   } catch (err) {
     console.log(err)
@@ -306,6 +316,7 @@ const checkMessagesforDeltas = async () => {
   process.stdout.write('.')
   try {
     let unreadInboxResponse = await reddit.query(`/message/unread`)
+    if (unreadInboxResponse.error) throw Error(unreadInboxResponse.error)
     let comments = (
       _(unreadInboxResponse)
         .get('data.children')
@@ -322,7 +333,8 @@ const checkMessagesforDeltas = async () => {
     )
     if (comments.commentLinks.length) {
       comments.commentLinks = _.uniq(comments.commentLinks)
-      await reddit.query({ URL: `/api/read_message`, method: 'POST', body: stringify({ id: JSON.stringify(comments.names).replace(/"|\[|\]/g,'') }) })
+      const read = await reddit.query({ URL: `/api/read_message`, method: 'POST', body: stringify({ id: JSON.stringify(comments.names).replace(/"|\[|\]/g,'') }) })
+      if (read.error) throw Error(read.error)
       _.each(comments.commentLinks, async (commentLink, index) => {
         const response = await reddit.query(`${commentLink}`)
         const { replies, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, created_utc, created } = _.get(response, '[1].data.children[0].data')
@@ -384,6 +396,7 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
     content: newContent
   }
   let response = await reddit.query({ URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(query) })
+  if (response.error) throw Error(response.error)
 }
 
 checkForDeltas()
