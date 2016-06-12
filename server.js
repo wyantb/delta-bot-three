@@ -110,6 +110,7 @@ const getNewComments = async (recursiveList) => {
 }
 
 const checkForDeltas = async () => {
+  process.stdout.write('$')
   try {
     let comments = await getNewComments()
     _.each(comments, async (entry, index) => {
@@ -302,6 +303,7 @@ app
   .listen(6969)
 
 const checkMessagesforDeltas = async () => {
+  process.stdout.write('.')
   try {
     let unreadInboxResponse = await reddit.query(`/message/unread`)
     let comments = (
