@@ -76,7 +76,7 @@ module.exports = class RedditAPIDriver {
         console.log(statusCode)
         await this.connect({type: 'GET_NEW_SESSION'})
         return await this.query(params)
-      } else if (statusCode == 502 || statusCode == 503) {
+      } else if (statusCode == 502 || statusCode == 503 || statusCode == 500) {
         console.log('80 R_API')
         console.log(statusCode)
         return await this.query(params)
