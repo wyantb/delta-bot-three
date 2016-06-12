@@ -296,6 +296,10 @@ const verifyThenAward = async comment => {
     query.text += `${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     let send = await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
     if (send.error) throw Error(send.error)
+    const flattened = _.flattenDeep(send.jquery)
+    const commentFullName = _.get(_.find(flattened, 'data.name'), 'data.name')
+    let distinguishResp = await reddit.query({ URL: `/api/distinguish?${stringify({ id: commentFullName, how: 'yes' })}`, method: 'POST' })
+    if (distinguishResp.error) throw Error(distinguishResp.error)
     return true
   } catch (err) {
     console.log(err)
