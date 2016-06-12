@@ -54,7 +54,7 @@ module.exports = class RedditAPIDriver {
   async query(params, notFirst) {
     try {
       if (!notFirst) setTimeout(f => {
-        console.log('timed out!')
+        console.log('timed out!', params)
         return { error: 'timed out' }
       }, 60000)
       const headers = this.headers
