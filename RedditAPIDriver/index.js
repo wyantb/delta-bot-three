@@ -60,11 +60,9 @@ module.exports = class RedditAPIDriver {
         let URL = `https://www.reddit.com${params}`
         if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
         else URL += '.json'
-        console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
         response = await fetch(URL, { headersNoAuth })
       } else if (typeof params === 'string')  {
         let URL = `${this.baseURL}${params}`
-        console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
         response = await fetch(`${URL}`, { headers })
       } else {
         const { URL, method, body } = params
