@@ -344,7 +344,7 @@ const checkMessagesforDeltas = async () => {
           if (result) return result
           return _.get(reply, 'data.author') === botUsername
         }, false)
-        const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
+        const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*?\/blockquote&gt;/,'').replace(/pre&gt;[^]*?\/pre&gt;/,'')
         if (!dbReplied && !!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comment)
       })
     }
