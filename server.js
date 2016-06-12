@@ -112,11 +112,11 @@ const getNewComments = async (recursiveList) => {
 const checkForDeltas = async () => {
   try {
     let comments = await getNewComments()
-    _.each(comments, (entry, index) => {
+    _.each(comments, async (entry, index) => {
       const { link_title, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, link_url, created_utc, created } = entry.data
       comments[index] = { link_title, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, link_url, created_utc, created }
       const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
-      if (!!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) verifyThenAward(comments[index])
+      if (!!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comments[index])
     })
   } catch (err) {
     console.log('Error!'.red)
@@ -284,8 +284,10 @@ const verifyThenAward = async comment => {
     }
     query.text += `${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
+    return true
   } catch (err) {
     console.log(err)
+    return true
   }
 }
 
@@ -316,6 +318,7 @@ const checkMessagesforDeltas = async () => {
         }, { names: [], commentLinks: [] })
     )
     comments.commentLinks = _.uniq(comments.commentLinks)
+    await reddit.query({ URL: `/api/read_message`, method: 'POST', body: stringify({ id: JSON.stringify(comments.names).replace(/"|\[|\]/g,'') }) })
     _.each(comments.commentLinks, async (commentLink, index) => {
       const response = await reddit.query(`${commentLink}`)
       const { replies, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, created_utc, created } = _.get(response, '[1].data.children[0].data')
@@ -326,9 +329,8 @@ const checkMessagesforDeltas = async () => {
         return _.get(reply, 'data.author') === botUsername
       }, false)
       const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
-      if (!dbReplied && !!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) verifyThenAward(comment)
+      if (!dbReplied && !!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comment)
     })
-    await reddit.query({ URL: `/api/read_message`, method: 'POST', body: stringify({ id: JSON.stringify(comments.names).replace(/"|\[|\]/g,'') }) })
 
   } catch (err) {
     console.log('Error!'.red)
