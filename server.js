@@ -169,7 +169,7 @@ const bumpFlairCount = async ({ name }) => {
     name: name,
     text: newFlairCount + '∆'
   }
-  await reddit.query({ URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' })
+  let response = await reddit.query({ URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' })
   if (response.error) throw Error(response.error)
   return newFlairCount
 }
