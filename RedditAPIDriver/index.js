@@ -55,9 +55,10 @@ module.exports = class RedditAPIDriver {
     let done = false
     try {
       if (!notFirst) setTimeout(f => {
-        console.log('timed out!', params)
-        console.log(done)
-        if (!done) return { error: 'timed out' }
+        if (!done) {
+          console.log('timed out!', params)
+          return { error: 'timed out' }
+        }
       }, 600000)
       const headers = this.headers
       const headersNoAuth = this.headersNoAuth
