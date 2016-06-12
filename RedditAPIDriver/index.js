@@ -52,10 +52,12 @@ module.exports = class RedditAPIDriver {
   async getNewSession() {
   }
   async query(params, notFirst) {
+    let done = false
     try {
       if (!notFirst) setTimeout(f => {
         console.log('timed out!', params)
-        return { error: 'timed out' }
+        console.log(done)
+        if (!done) return { error: 'timed out' }
       }, 60000)
       const headers = this.headers
       const headersNoAuth = this.headersNoAuth
@@ -75,8 +77,10 @@ module.exports = class RedditAPIDriver {
       }
       let statusCode = response.status
       if (statusCode !== 200) console.log(statusCode)
-      if (statusCode === 200) return await response.json()
-      else if (statusCode == 401 || statusCode == 403) {
+      if (statusCode === 200) {
+        done = true
+        return await response.json()
+      } else if (statusCode == 401 || statusCode == 403) {
         console.log('75 R_API')
         await this.connect({type: 'GET_NEW_SESSION'})
         return await this.query(params, true)
@@ -84,8 +88,11 @@ module.exports = class RedditAPIDriver {
         console.log('80 R_API')
         return await this.query(params, true)
       } else {
+        const text = await response.text()
         console.log('74 R_API')
-        return await response.text()
+        console.log(text)
+        done = true
+        return text
       }
     } catch (err) {
       console.log('89 R_API')
