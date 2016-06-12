@@ -52,10 +52,11 @@ module.exports = class RedditAPIDriver {
   async getNewSession() {
   }
   async query(params, notFirst) {
-    if (!notFirst) setTimeout(f => {
-      throw Error('timed out!')
-    }, 60000)
     try {
+      if (!notFirst) setTimeout(f => {
+        console.log('timed out!')
+        return { error: 'timed out' }
+      }, 60000)
       const headers = this.headers
       const headersNoAuth = this.headersNoAuth
       let response
