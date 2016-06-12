@@ -37,7 +37,7 @@ const headers = {
   'user-agent': `DB3/1.0.0 by MystK`
 }
 
-const dev = true
+const dev = false
 let subreddit = 'changemyview'
 let botUsername = credentials.username
 if (dev) subreddit = 'changemyviewDB3Dev'
