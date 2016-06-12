@@ -72,16 +72,21 @@ module.exports = class RedditAPIDriver {
       let statusCode = response.status
       if (statusCode == 200) return await response.json()
       else if (statusCode == 401 || statusCode == 403) {
+        console.log('75 R_API')
+        console.log(statusCode)
         await this.connect({type: 'GET_NEW_SESSION'})
         return await this.query(params)
-      } else if (statusCode == 502) return await this.query(params)
-      else {
-        console.log('79 R_API')
+      } else if (statusCode == 502 || statusCode == 503) {
+        console.log('80 R_API')
+        console.log(statusCode)
+        return await this.query(params)
+      } else {
+        console.log('74 R_API')
         console.log(statusCode)
         return await response.text()
       }
    } catch (err) {
-     console.log('84 R_API')
+     console.log('89 R_API')
      console.log(err)
    }
   }
