@@ -385,3 +385,6 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
   }
   let response = await reddit.query({ URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(query) })
 }
+
+checkForDeltas()
+checkMessagesforDeltas()
