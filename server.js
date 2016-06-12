@@ -317,21 +317,22 @@ const checkMessagesforDeltas = async () => {
           return result
         }, { names: [], commentLinks: [] })
     )
-    comments.commentLinks = _.uniq(comments.commentLinks)
-    await reddit.query({ URL: `/api/read_message`, method: 'POST', body: stringify({ id: JSON.stringify(comments.names).replace(/"|\[|\]/g,'') }) })
-    _.each(comments.commentLinks, async (commentLink, index) => {
-      const response = await reddit.query(`${commentLink}`)
-      const { replies, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, created_utc, created } = _.get(response, '[1].data.children[0].data')
-      const { title: link_title, url: link_url } = _.get(response, '[0].data.children[0].data')
-      let comment = { link_title, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, link_url, created_utc, created }
-      const dbReplied = _.reduce(_.get(replies, 'data.children'), (result, reply) => {
-        if (result) return result
-        return _.get(reply, 'data.author') === botUsername
-      }, false)
-      const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
-      if (!dbReplied && !!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comment)
-    })
-
+    if (comments.commentLinks.length) {
+      comments.commentLinks = _.uniq(comments.commentLinks)
+      await reddit.query({ URL: `/api/read_message`, method: 'POST', body: stringify({ id: JSON.stringify(comments.names).replace(/"|\[|\]/g,'') }) })
+      _.each(comments.commentLinks, async (commentLink, index) => {
+        const response = await reddit.query(`${commentLink}`)
+        const { replies, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, created_utc, created } = _.get(response, '[1].data.children[0].data')
+        const { title: link_title, url: link_url } = _.get(response, '[0].data.children[0].data')
+        let comment = { link_title, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, link_url, created_utc, created }
+        const dbReplied = _.reduce(_.get(replies, 'data.children'), (result, reply) => {
+          if (result) return result
+          return _.get(reply, 'data.author') === botUsername
+        }, false)
+        const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
+        if (!dbReplied && !!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comment)
+      })
+    }
   } catch (err) {
     console.log('Error!'.red)
     console.error(err)
