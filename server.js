@@ -187,33 +187,35 @@ const createWikiHiddenParams = async content => {
       comment: i18n[locale].hiddenParamsComment,
       deltas: [],
     }
-    let links = content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+\?context=2`, 'g'))
-    links = _.uniq(links)
-    await new Promise(async (res, rej) => {
-      _.forEach(links, async link => {
-        const deltaCommentwContext = link.match(/[0-9a-z]+\?context=2/)[0]
-        const deltaComment = deltaCommentwContext.replace('?context=2', '')
-        const base = link.replace(deltaCommentwContext, '')
-        let response = await reddit.query(`${base}${deltaComment}`)
-        const title = _.get(response, '[0].data.children[0].data.title')
-        const awardedBy = _.get(response, '[1].data.children[0].data.author')
-        const unixUTC = _.get(response, '[1].data.children[0].data.created_utc')
-        const params = {
-          b: base,
-          dc: deltaComment,
-          t: title,
-          ab: awardedBy,
-          uu: unixUTC,
-        }
-        hiddenParams.deltas.push(params)
-        if (hiddenParams.deltas.length === links.length) res()
+    if (content) {
+      let links = content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+\?context=2`, 'g'))
+      links = _.uniq(links)
+      await new Promise(async (res, rej) => {
+        _.forEach(links, async link => {
+          const deltaCommentwContext = link.match(/[0-9a-z]+\?context=2/)[0]
+          const deltaComment = deltaCommentwContext.replace('?context=2', '')
+          const base = link.replace(deltaCommentwContext, '')
+          let response = await reddit.query(`${base}${deltaComment}`)
+          const title = _.get(response, '[0].data.children[0].data.title')
+          const awardedBy = _.get(response, '[1].data.children[0].data.author')
+          const unixUTC = _.get(response, '[1].data.children[0].data.created_utc')
+          const params = {
+            b: base,
+            dc: deltaComment,
+            t: title,
+            ab: awardedBy,
+            uu: unixUTC,
+          }
+          hiddenParams.deltas.push(params)
+          if (hiddenParams.deltas.length === links.length) res()
+        })
+        setTimeout(() => rej(), 60000)
       })
-      setTimeout(() => rej(), 60000)
-    })
-    hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
+      hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
+    }
     return hiddenParams
   } catch (err) {
-    console.log('90')
+    console.log('216')
     console.log(err)
   }
 }
