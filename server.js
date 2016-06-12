@@ -288,10 +288,15 @@ const verifyThenAward = async comment => {
       query.text += text
       const flairCount = await bumpFlairCount({ name: parentThing.author })
       await addDeltaToWiki({ user: parentThing.author, id, linkTitle, linkURL, author, flairCount, createdUTC })
-    } else if (issueCount >= 2) {
-      let text = i18n[locale].noAward.issueCount
-      text = text.replace(/ISSUECOUNT/g, issueCount)
-      query.text = `${text}\n\n${query.text}`
+    } else {
+      let rejected = i18n[locale].noAward.rejected
+      if (issueCount >= 2) {
+        let issueCi18n = i18n[locale].noAward.issueCount
+        issueCi18n = issueCi18n.replace(/ISSUECOUNT/g, issueCount)
+        query.text = `${rejected} ${issueCi18n}\n\n${query.text}`
+      } else {
+        query.text = `${rejected} ${query.text}`
+      }
     }
     query.text += `${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     let send = await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
