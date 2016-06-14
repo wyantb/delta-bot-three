@@ -206,7 +206,7 @@ const createWikiHiddenParams = async content => {
           const base = link.replace(deltaCommentwContext, '')
           let response = await reddit.query(`${base}${deltaComment}`)
           if (response.error) throw Error(response.error)
-          const title = _.get(response, '[0].data.children[0].data.title').replace(')', 'AXDK9vhFALCkjXPmwvSB')
+          const title = _.get(response, '[0].data.children[0].data.title').replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
           const awardedBy = _.get(response, '[1].data.children[0].data.author')
           const unixUTC = _.get(response, '[1].data.children[0].data.created_utc')
           const params = {
@@ -386,7 +386,7 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
   hiddenParams.deltas.push({
     b: linkURL,
     dc: id,
-    t: linkTitle.replace(')', 'AXDK9vhFALCkjXPmwvSB'),
+    t: linkTitle.replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB'),
     ab: author,
     uu: createdUTC,
   })
@@ -395,7 +395,7 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
     const { b, dc, t, ab, uu } = col
     const date = new Date(uu * 1000)
     const [month, day, year] = [date.getMonth() + 1, date.getDate(), date.getFullYear()]
-    const newRow = `|${month}/${day}/${year}|[${t.replace('AXDK9vhFALCkjXPmwvSB', ')')}](${b})|[Link](${b}${dc}?context=2)|/u/${ab}|\r\n`
+    const newRow = `|${month}/${day}/${year}|[${t.replace(/AXDK9vhFALCkjXPmwvSB/g, ')')}](${b})|[Link](${b}${dc}?context=2)|/u/${ab}|\r\n`
     newContent += newRow
     process.stdout.write('!')
   })
