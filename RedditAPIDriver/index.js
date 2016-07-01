@@ -78,7 +78,7 @@ module.exports = class RedditAPIDriver {
             response = await fetch(URL, { headersNoAuth })
           } else {
             let URL = `${this.baseURL}${params}`
-            console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
+            if (params.indexOf('/message/unread') === -1) console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
             response = await fetch(`${URL}`, { headers })
           }
         } else {
