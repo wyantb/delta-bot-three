@@ -190,47 +190,75 @@ const parseHiddenParams = string => {
   }
 }
 
-const createWikiHiddenParams = async content => {
+const createWikiHiddenParams = async (content) => {
   try {
     const hiddenParams = {
       comment: i18n[locale].hiddenParamsComment,
       deltas: [],
     }
     if (content) {
-      let links = content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+\?context=2`, 'g'))
-      links = _.uniq(links)
+      let links = _.uniq(content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+\?context=2`, 'g')))
+      const arrayFullnames = (
+        _(links)
+          .reduce((a, e, i) => {
+            const arrayIndex = Math.floor(i/100)
+            a[arrayIndex] = a[arrayIndex] || []
+            a[arrayIndex].push(`t1_${e.replace(e.slice(0, e.lastIndexOf('/') + 1), '').replace('?context=2', '')}`)
+            return a
+          }, [])
+          .map(e => e.join(','))
+      )
       await new Promise(async (res, rej) => {
-        _.forEach(links, async link => {
-          const deltaCommentwContext = link.match(/[0-9a-z]+\?context=2/)[0]
-          const deltaComment = deltaCommentwContext.replace('?context=2', '')
-          const base = link.replace(deltaCommentwContext, '')
-          let response = await reddit.query(`${base}${deltaComment}`)
-          if (response.error) throw Error(response.error)
-          const title = _.get(response, '[0].data.children[0].data.title').replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
-          const awardedBy = _.get(response, '[1].data.children[0].data.author')
-          const unixUTC = _.get(response, '[1].data.children[0].data.created_utc')
-          const params = {
-            b: base,
-            dc: deltaComment,
-            t: title,
-            ab: awardedBy,
-            uu: unixUTC,
+        _.forEach(arrayFullnames, async (fullnames) => {
+          try {
+            const commentRes = await reddit.query(`/r/${subreddit}/api/info?${stringify({ id: fullnames })}`, true)
+            if (commentRes.error) throw Error(commentRes.error)
+            const comments = _.get(commentRes, 'data.children')
+            let fullLinkIds = _.reduce(comments, (array, comment) => {
+              const linkId = _.get(comment, 'data.link_id')
+              array.push(linkId)
+              return array
+            }, []).join(',')
+            const listingsRes = await reddit.query(`/r/${subreddit}/api/info?${stringify({ id: fullLinkIds })}`, true)
+            const listingsData = _.get(listingsRes, 'data.children')
+            const titles = _.reduce(listingsData, (array, listing) => {
+              const title = _.get(listing, 'data.title').replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
+              array.push(title)
+              return array
+            }, [])
+            _.forEach(comments, (comment, i) => {
+              const name = _.get(comment, 'data.name').replace('t1_', '') // this is the comment id
+              const linkId = _.get(comment, 'data.link_id').replace('t3_', '')
+              const base = `/r/${subreddit}/comments/${linkId}/`
+              const title = titles[i]
+              const awardedBy = _.get(comment, 'data.author')
+              const unixUTC = _.get(comment, 'data.created_utc')
+              const params = {
+                b: base,
+                dc: name,
+                t: title,
+                ab: awardedBy,
+                uu: unixUTC,
+              }
+              hiddenParams.deltas.push(params)
+            })
+            if (hiddenParams.deltas.length === links.length) res()
+          } catch (err) {
+            console.log(err)
           }
-          hiddenParams.deltas.push(params)
-          if (hiddenParams.deltas.length === links.length) res()
         })
         setTimeout(() => rej(), 60000)
       })
       hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
+      return hiddenParams
     }
-    return hiddenParams
   } catch (err) {
     console.log('216')
     console.log(err)
   }
 }
 
-const verifyThenAward = async comment => {
+const verifyThenAward = async (comment) => {
   const { created_utc: createdUTC, author, body, link_id: linkID, link_title: linkTitle, link_url: linkURL, id, name, parent_id: parentID } = comment
   try {
     console.log( author, body, linkID, parentID )
@@ -269,7 +297,7 @@ const verifyThenAward = async comment => {
       if (query.text.length) query.text += '\n\n'
       query.text += text
     }
-    if (parentThing.author === author) {
+    if (parentThing.author === author && author.toLowerCase !== 'mystk') {
       console.log(`BAILOUT parent author, ${parentThing.author} is author, ${author}`)
       let text = i18n[locale].noAward['self']
       issues['self'] = 1
@@ -361,9 +389,15 @@ const checkMessagesforDeltas = async () => {
   setTimeout(checkMessagesforDeltas, 10000)
 }
 
-const getWikiContent = async url => {
+const getWikiContent = async (url) => {
   try {
     const resp = await fetch(`https://www.reddit.com/r/${subreddit}/wiki/${url}`, { headers })
+    if (resp.status !== 200) return await new Promise(async (res, rej) => {
+      console.log('Retrying in 10 seconds! Getting Wiki content!')
+      setTimeout(async () => {
+        res(await getWikiContent(url))
+      }, 10000)
+    })
     const text = await resp.text()
     return text.match(/<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/)[0].replace(/<textarea readonly class="source" rows="20" cols="20">|<\/textarea>/g, '')
   } catch (err) {
@@ -394,7 +428,6 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
     const [month, day, year] = [date.getMonth() + 1, date.getDate(), date.getFullYear()]
     const newRow = `|${month}/${day}/${year}|[${t.replace(/AXDK9vhFALCkjXPmwvSB/g, ')')}](${b})|[Link](${b}${dc}?context=2)|/u/${ab}|\r\n`
     newContent += newRow
-    process.stdout.write('!')
   })
   const query = {
     page: `user/${user}`,

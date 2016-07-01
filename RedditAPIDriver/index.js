@@ -51,50 +51,59 @@ module.exports = class RedditAPIDriver {
   }
   async getNewSession() {
   }
-  async query(params, notFirst) {
-    let done = false
+  async query(params, noOauth) {
     try {
-      if (!notFirst) setTimeout(f => {
-        if (!done) {
-          console.log('timed out!', params)
-          return { error: 'timed out' }
+      return await new Promise(async (res, rej) => {
+        const retry = (res, rej) => {
+          console.log('Retrying in 10 seconds! R_API')
+          setTimeout(async () => {
+            res(await this.query(params))
+          }, 10000)
         }
-      }, 600000)
-      const headers = this.headers
-      const headersNoAuth = this.headersNoAuth
-      let response
-      if (typeof params === 'string' && params.indexOf('/comments') > -1) {
-        let URL = `https://www.reddit.com${params}`
-        if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
-        else URL += '.json'
-        response = await fetch(URL, { headersNoAuth })
-      } else if (typeof params === 'string')  {
-        let URL = `${this.baseURL}${params}`
-        response = await fetch(`${URL}`, { headers })
-      } else {
-        const { URL, method, body } = params
-        console.log(`REDDITAPI: QUERYING: ${method} ${this.baseURL}${URL}`.yellow)
-        response = await fetch(`${this.baseURL}${URL}`, { headers, method, body })
-      }
-      let statusCode = response.status
-      if (statusCode !== 200) console.log(statusCode)
-      if (statusCode === 200) {
-        done = true
-        return await response.json()
-      } else if (statusCode == 401 || statusCode == 403) {
-        console.log('75 R_API')
-        await this.connect({type: 'GET_NEW_SESSION'})
-        return await this.query(params, true)
-      } else if (statusCode == 502 || statusCode == 503 || statusCode == 500) {
-        console.log('80 R_API')
-        return await this.query(params, true)
-      } else {
-        const text = await response.text()
-        console.log('74 R_API')
-        console.log(text)
-        done = true
-        return text
-      }
+        const headers = this.headers
+        const headersNoAuth = this.headersNoAuth
+        let response
+        if (typeof params === 'string' && params.indexOf('/comments') > -1) {
+          let URL = `https://www.reddit.com${params}`
+          if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
+          else URL += '.json'
+          response = await fetch(URL, { headersNoAuth })
+        } else if (typeof params === 'string')  {
+          if (noOauth) {
+            let URL = `https://www.reddit.com${params}`
+            if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
+            else URL += '.json'
+            console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
+            response = await fetch(URL, { headersNoAuth })
+          } else {
+            let URL = `${this.baseURL}${params}`
+            console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
+            response = await fetch(`${URL}`, { headers })
+          }
+        } else {
+          const { URL, method, body } = params
+          console.log(`REDDITAPI: QUERYING: ${method} ${this.baseURL}${URL}`.yellow)
+          response = await fetch(`${this.baseURL}${URL}`, { headers, method, body })
+        }
+        let statusCode = response.status
+        if (statusCode !== 200) {
+          console.log(await response.text())
+          console.log(`Status Code: ${statusCode}`.red)
+        }
+        if (statusCode === 200) {
+          try {
+            res(await response.json())
+          } catch (error) {
+            retry(res, rej)
+          }
+        } else if (statusCode == 401 || statusCode == 403) {
+          console.log('75 R_API')
+          await this.connect({type: 'GET_NEW_SESSION'})
+          retry(res, rej)
+        } else {
+          retry(res, rej)
+        }
+      })
     } catch (err) {
       console.log('89 R_API')
       console.log(err)
