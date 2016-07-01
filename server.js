@@ -181,10 +181,9 @@ const getFlair = async ({ name }) => {
 
 const parseHiddenParams = string => {
   try {
-    const hiddenSection = string.match(/DB3PARAMSSTART.+DB3PARAMSEND/)[0]
-    const stringParams = hiddenSection.slice('DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length)
-    params = JSON.parse(stringHiddenParams)
-    return params
+    const hiddenSection = string.match(/DB3PARAMSSTART[^]+DB3PARAMSEND/)[0]
+    const stringParams = hiddenSection.slice('DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length).replace(/&quot;/g, '"')
+    return JSON.parse(stringParams)
   } catch (error) {
     return false
   }
