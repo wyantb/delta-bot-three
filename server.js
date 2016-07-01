@@ -226,10 +226,14 @@ const createWikiHiddenParams = async (content) => {
               array.push(title)
               return array
             }, [])
+            const baseUrls = _.reduce(listingsData, (array, listing) => {
+              const title = _.get(listing, 'data.permalink').replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
+              array.push(title)
+              return array
+            }, [])
             _.forEach(comments, (comment, i) => {
               const name = _.get(comment, 'data.name').replace('t1_', '') // this is the comment id
-              const linkId = _.get(comment, 'data.link_id').replace('t3_', '')
-              const base = `/r/${subreddit}/comments/${linkId}/`
+              const base = baseUrls[i]
               const title = titles[i]
               const awardedBy = _.get(comment, 'data.author')
               const unixUTC = _.get(comment, 'data.created_utc')
