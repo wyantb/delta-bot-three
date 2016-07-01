@@ -297,7 +297,7 @@ const verifyThenAward = async (comment) => {
       if (query.text.length) query.text += '\n\n'
       query.text += text
     }
-    if (parentThing.author === author && author.toLowerCase !== 'mystk') {
+    if (parentThing.author === author && author.toLowerCase() !== 'mystk') {
       console.log(`BAILOUT parent author, ${parentThing.author} is author, ${author}`)
       let text = i18n[locale].noAward['self']
       issues['self'] = 1
