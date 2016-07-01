@@ -32,9 +32,9 @@ try {
   "clientSecret": "Your application secret"
 }`.red)
 }
-
+const packageJson = require('./package.json')
 const headers = {
-  'user-agent': `DB3/2.0.0 by MystK`
+  'user-agent': `DB3/v${packageJson.version} by MystK`
 }
 
 const dev = false
@@ -42,7 +42,7 @@ let subreddit = 'changemyview'
 let botUsername = credentials.username
 if (dev) subreddit = 'changemyviewDB3Dev'
 
-const reddit = new Reddit(credentials)
+const reddit = new Reddit(credentials, packageJson.version)
 const entry = async (f) => {
   await reddit.connect()
   if (!lastParsedCommentID) {
