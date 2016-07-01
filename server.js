@@ -246,6 +246,7 @@ const verifyThenAward = async comment => {
     let json = await reddit.query(`/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`)
     if (json.error) throw Error(json.error)
     let parentThing = json[1].data.children[0].data
+    const listing = json[0].data.children[0].data
     if (!parentID.match(/^t1_/g)) {
       parentThing = json[0].data.children[0].data
       console.log('BAILOUT delta tried to be awarded to listing')
@@ -260,6 +261,13 @@ const verifyThenAward = async comment => {
       let text = i18n[locale].noAward['littleText']
       issues['littleText'] = 1
       text = text.replace(/PARENTUSERNAME/g, parentThing.author)
+      if (query.text.length) query.text += '\n\n'
+      query.text += text
+    }
+    if (parentThing.author === listing.author) {
+      console.log(`BAILOUT parent author, ${parentThing.author} is listing author, ${listing.author}`)
+      let text = i18n[locale].noAward['op']
+      issues['op'] = 1
       if (query.text.length) query.text += '\n\n'
       query.text += text
     }
