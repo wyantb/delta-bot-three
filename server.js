@@ -34,7 +34,7 @@ try {
 }
 
 const headers = {
-  'user-agent': `DB3/1.0.0 by MystK`
+  'user-agent': `DB3/2.0.0 by MystK`
 }
 
 const dev = false

@@ -20,7 +20,7 @@ module.exports = class RedditAPIDriver {
       let res = await fetch('https://www.reddit.com/api/v1/access_token', {
         method: 'POST',
         headers: {
-          'user-agent': `DB3/1.0.0 by MystK`,
+          'user-agent': `DB3/2.0.0 by MystK`,
           'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
           'Authorization': `Basic ${auth}`
         },
@@ -42,10 +42,10 @@ module.exports = class RedditAPIDriver {
     const { token_type, access_token } = json
     this.headers = {
       'authorization': `${token_type} ${access_token}`,
-      'user-agent': `DB3/1.0.0 by MystK`
+      'user-agent': `DB3/2.0.0 by MystK`
     }
     this.headersNoAuth = {
-      'user-agent': `DB3/1.0.0 by MystK`
+      'user-agent': `DB3/2.0.0 by MystK`
     }
     return true
   }
