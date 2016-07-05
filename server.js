@@ -17,9 +17,16 @@ const app = new Koa()
 const router = new Router()
 const fs = require('fs')
 fs.writeFile = promisify(fs.writeFile)
-let state = require('./state.json')
-let lastParsedCommentIDs = state.lastParsedCommentIDs || []
-let lastParsedCommentID = lastParsedCommentIDs[0] || null
+let state
+let lastParsedCommentIDs
+let lastParsedCommentID
+try {
+  state = require('./state.json')
+  lastParsedCommentIDs = state.lastParsedCommentIDs || []
+  lastParsedCommentID = lastParsedCommentIDs[0] || null
+} catch (err) {
+  state = {}
+}
 console.log(`server.js called!`.gray)
 try {
   var credentials = require('./credentials')
@@ -394,8 +401,10 @@ const checkMessagesforDeltas = async () => {
 
 const getWikiContent = async (url) => {
   try {
-    const resp = await fetch(`https://www.reddit.com/r/${subreddit}/wiki/${url}`, { headers })
+    const url = `https://www.reddit.com/r/${subreddit}/wiki/${url}`
+    const resp = await fetch(url, { headers })
     if (resp.status !== 200) return await new Promise(async (res, rej) => {
+      console.log(url)
       console.log('Retrying in 10 seconds! Getting Wiki content!')
       setTimeout(async () => {
         res(await getWikiContent(url))
