@@ -265,6 +265,10 @@ const createWikiHiddenParams = async (content) => {
   } catch (err) {
     console.log('216')
     console.log(err)
+    return {
+      comment: i18n[locale].hiddenParamsComment,
+      deltas: [],
+    }
   }
 }
 
@@ -401,15 +405,7 @@ const checkMessagesforDeltas = async () => {
 
 const getWikiContent = async (url) => {
   try {
-    const url = `https://www.reddit.com/r/${subreddit}/wiki/${url}`
-    const resp = await fetch(url, { headers })
-    if (resp.status !== 200) return await new Promise(async (res, rej) => {
-      console.log(url)
-      console.log('Retrying in 10 seconds! Getting Wiki content!')
-      setTimeout(async () => {
-        res(await getWikiContent(url))
-      }, 10000)
-    })
+    const resp = await reddit.query(`/r/${subreddit}/wiki/${url}`, true)
     const text = await resp.text()
     return text.match(/<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/)[0].replace(/<textarea readonly class="source" rows="20" cols="20">|<\/textarea>/g, '')
   } catch (err) {
