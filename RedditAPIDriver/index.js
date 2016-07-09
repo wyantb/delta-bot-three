@@ -52,36 +52,27 @@ module.exports = class RedditAPIDriver {
   }
   async getNewSession() {
   }
-  async query(params, noOauth, wiki, nojson) {
+  async query(params, noOauth, text) {
     try {
       return await new Promise(async (res, rej) => {
         const retry = (res, rej) => {
           console.log('Retrying in 10 seconds! R_API')
           setTimeout(async () => {
-            res(await this.query(params, noOauth, wiki, nojson))
+            res(await this.query(params, noOauth, text))
           }, 10000)
         }
         const headers = this.headers
         const headersNoAuth = this.headersNoAuth
         let response
-        if (typeof params === 'string' && params.indexOf('/comments') > -1) {
-          let URL = `https://www.reddit.com${params}`
-          if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
-          else URL += '.json'
-          response = await fetch(URL, { headersNoAuth })
-        } else if (typeof params === 'string') {
+        if (typeof params === 'string') {
           if (noOauth) {
             let URL = `https://www.reddit.com${params}`
-            if (nojson) {
-              if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
-              else URL += '.json'
-            }
             console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
             response = await fetch(URL, { headersNoAuth })
           } else {
             let URL = `${this.baseURL}${params}`
-            if (params.indexOf('/message/unread') === -1) console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
-            response = await fetch(`${URL}`, { headers })
+            console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
+            response = await fetch(URL, { headers })
           }
         } else {
           const { URL, method, body } = params
@@ -90,20 +81,13 @@ module.exports = class RedditAPIDriver {
         }
         let statusCode = response.status
         if (statusCode !== 200) {
-          if (wiki && statusCode === 404) {
-            try {
-              res(await response.text())
-              return
-            } catch (error) {
-              retry(res, rej)
-            }
-          }
           console.log(await response.text())
           console.log(`Status Code: ${statusCode}`.red)
         }
         if (statusCode === 200) {
           try {
-            res(await response.json())
+            if (text) res(await response.text())
+            else res(await response.json())
           } catch (error) {
             retry(res, rej)
           }
