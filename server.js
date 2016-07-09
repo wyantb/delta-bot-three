@@ -36,7 +36,8 @@ try {
   "username": "Your Reddit username",
   "password": "Your Reddit password",
   "clientID": "Your application ID",
-  "clientSecret": "Your application secret"
+  "clientSecret": "Your application secret",
+  "subreddit": "Your subreddit to moderate"
 }`.red)
 }
 const packageJson = require('./package.json')
@@ -44,10 +45,8 @@ const headers = {
   'user-agent': `DB3/v${packageJson.version} by MystK`
 }
 
-const dev = false
-let subreddit = 'changemyview'
+let subreddit = credentials.subreddit
 let botUsername = credentials.username
-if (dev) subreddit = 'changemyviewDB3Dev'
 
 const reddit = new Reddit(credentials, packageJson.version)
 const entry = async (f) => {
@@ -60,6 +59,8 @@ const entry = async (f) => {
     await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
     lastParsedCommentID = lastParsedCommentIDs[0]
   }
+  const resp = await reddit.query(`/r/${subreddit}/wiki/user/asdasdasd`, true, true)
+  console.log(resp)
 };entry()
 
 const getNewComments = async (recursiveList) => {
@@ -405,8 +406,7 @@ const checkMessagesforDeltas = async () => {
 
 const getWikiContent = async (url) => {
   try {
-    const resp = await reddit.query(`/r/${subreddit}/wiki/${url}`, true)
-    const text = await resp.text()
+    const resp = await reddit.query(`/r/${subreddit}/wiki/${url}`, true, true, true)
     return text.match(/<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/)[0].replace(/<textarea readonly class="source" rows="20" cols="20">|<\/textarea>/g, '')
   } catch (err) {
     return false
@@ -446,5 +446,5 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
   if (response.error) throw Error(response.error)
 }
 
-checkForDeltas()
-checkMessagesforDeltas()
+// checkForDeltas()
+// checkMessagesforDeltas()

@@ -52,13 +52,13 @@ module.exports = class RedditAPIDriver {
   }
   async getNewSession() {
   }
-  async query(params, noOauth) {
+  async query(params, noOauth, wiki, nojson) {
     try {
       return await new Promise(async (res, rej) => {
         const retry = (res, rej) => {
           console.log('Retrying in 10 seconds! R_API')
           setTimeout(async () => {
-            res(await this.query(params))
+            res(await this.query(params, noOauth, wiki, nojson))
           }, 10000)
         }
         const headers = this.headers
@@ -69,11 +69,13 @@ module.exports = class RedditAPIDriver {
           if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
           else URL += '.json'
           response = await fetch(URL, { headersNoAuth })
-        } else if (typeof params === 'string')  {
+        } else if (typeof params === 'string') {
           if (noOauth) {
             let URL = `https://www.reddit.com${params}`
-            if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
-            else URL += '.json'
+            if (nojson) {
+              if (URL.indexOf('?') > -1) URL = URL.replace('?', '.json?')
+              else URL += '.json'
+            }
             console.log(`REDDITAPI: QUERYING: GET ${URL}`.yellow)
             response = await fetch(URL, { headersNoAuth })
           } else {
@@ -88,6 +90,14 @@ module.exports = class RedditAPIDriver {
         }
         let statusCode = response.status
         if (statusCode !== 200) {
+          if (wiki && statusCode === 404) {
+            try {
+              res(await response.text())
+              return
+            } catch (error) {
+              retry(res, rej)
+            }
+          }
           console.log(await response.text())
           console.log(`Status Code: ${statusCode}`.red)
         }
