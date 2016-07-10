@@ -136,7 +136,7 @@ const checkForDeltas = async () => {
     console.log('Error!'.red)
     console.error(err)
   }
-  setTimeout(checkForDeltas, 10000)
+  setTimeout(checkForDeltas, 30000)
 }
 
 router.get('/getNewComments', async (ctx, next) => {
@@ -398,7 +398,7 @@ const checkMessagesforDeltas = async () => {
     console.log('Error!'.red)
     console.error(err)
   }
-  setTimeout(checkMessagesforDeltas, 10000)
+  setTimeout(checkMessagesforDeltas, 30000)
 }
 
 const getWikiContent = async (url) => {
