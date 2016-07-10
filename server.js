@@ -287,6 +287,7 @@ const verifyThenAward = async (comment) => {
     if (json.error) throw Error(json.error)
     let parentThing = json[1].data.children[0].data
     const listing = json[0].data.children[0].data
+    if (parentThing.author === '[deleted]') return true
     if (!parentID.match(/^t1_/g) || parentThing.author === listing.author && author.toLowerCase() !== 'mystk') {
       console.log(`BAILOUT parent author, ${parentThing.author} is listing author, ${listing.author}`)
       let text = i18n[locale].noAward['op']
