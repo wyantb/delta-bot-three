@@ -215,7 +215,7 @@ const createWikiHiddenParams = async (content) => {
       await new Promise(async (res, rej) => {
         _.forEach(arrayFullnames, async (fullnames) => {
           try {
-            const commentRes = await reddit.query(`/r/${subreddit}/api/info?${stringify({ id: fullnames })}`, true)
+            const commentRes = await reddit.query(`/r/${subreddit}/api/info?${stringify({ id: fullnames })}`)
             if (commentRes.error) throw Error(commentRes.error)
             const comments = _.get(commentRes, 'data.children')
             let fullLinkIds = _.reduce(comments, (array, comment) => {
@@ -223,7 +223,7 @@ const createWikiHiddenParams = async (content) => {
               array.push(linkId)
               return array
             }, []).join(',')
-            const listingsRes = await reddit.query(`/r/${subreddit}/api/info?${stringify({ id: fullLinkIds })}`, true)
+            const listingsRes = await reddit.query(`/r/${subreddit}/api/info?${stringify({ id: fullLinkIds })}`)
             const listingsData = _.get(listingsRes, 'data.children')
             const titles = _.reduce(listingsData, (array, listing) => {
               const title = _.get(listing, 'data.title').replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
