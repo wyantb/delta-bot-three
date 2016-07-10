@@ -52,13 +52,13 @@ module.exports = class RedditAPIDriver {
   }
   async getNewSession() {
   }
-  async query(params, noOauth, text) {
+  async query(params, noOauth, wiki) {
     try {
       return await new Promise(async (res, rej) => {
         const retry = (res, rej) => {
           console.log('Retrying in 10 seconds! R_API')
           setTimeout(async () => {
-            res(await this.query(params, noOauth, text))
+            res(await this.query(params, noOauth, wiki))
           }, 10000)
         }
         const headers = this.headers
@@ -80,13 +80,13 @@ module.exports = class RedditAPIDriver {
           response = await fetch(`${this.baseURL}${URL}`, { headers, method, body })
         }
         let statusCode = response.status
-        if (statusCode !== 200) {
+        if (statusCode !== 200 && !wiki) {
           console.log(await response.text())
           console.log(`Status Code: ${statusCode}`.red)
         }
         if (statusCode === 200) {
           try {
-            if (text) res(await response.text())
+            if (wiki) res(await response.text())
             else res(await response.json())
           } catch (error) {
             retry(res, rej)
@@ -96,7 +96,8 @@ module.exports = class RedditAPIDriver {
           await this.connect({type: 'GET_NEW_SESSION'})
           retry(res, rej)
         } else {
-          retry(res, rej)
+          if (wiki) res(await response.text())
+          else retry(res, rej)
         }
       })
     } catch (err) {

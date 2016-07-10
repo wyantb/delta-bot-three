@@ -169,17 +169,14 @@ router.get('/dynamic/*', async (ctx, next) => {
   await next()
 })
 
-const bumpFlairCount = async ({ name }) => {
-  const flair = await getFlair({ name })
-  if (flair) var newFlairCount = (+flair.slice(0,-1)) + 1
-  else newFlairCount = 1
+const updateFlair = async ({ name, flairCount }) => {
   const flairQuery = {
     name: name,
-    text: newFlairCount + '∆'
+    text: flairCount + '∆'
   }
   let response = await reddit.query({ URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' })
   if (response.error) throw Error(response.error)
-  return newFlairCount
+  return true
 }
 
 const getFlair = async ({ name }) => {
@@ -263,6 +260,7 @@ const createWikiHiddenParams = async (content) => {
       hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
       return hiddenParams
     }
+    return hiddenParams
   } catch (err) {
     console.log('216')
     console.log(err)
@@ -326,8 +324,8 @@ const verifyThenAward = async (comment) => {
       text = text.replace(/USERNAME/g, parentThing.author).replace(/SUBREDDIT/g, subreddit)
       if (query.text.length) query.text += '\n\n'
       query.text += text
-      const flairCount = await bumpFlairCount({ name: parentThing.author })
-      await addDeltaToWiki({ user: parentThing.author, id, linkTitle, linkURL, author, flairCount, createdUTC })
+      const flairCount = await addDeltaToWiki({ user: parentThing.author, id, linkTitle, linkURL, author, createdUTC })
+      await updateFlair({ name: parentThing.author , flairCount })
     } else {
       let rejected = i18n[locale].noAward.rejected
       if (issueCount >= 2) {
@@ -413,7 +411,7 @@ const getWikiContent = async (url) => {
   }
 }
 
-const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author, flairCount }) => {
+const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author }) => {
   let content = await getWikiContent(`user/${user}`)
   // First, find all wiki pages and combine for parsing
   if (content && content.indexOf('Any delta history before February 2015 can be found at') > -1) {
@@ -429,6 +427,7 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
     ab: author,
     uu: createdUTC,
   })
+  const flairCount = hiddenParams.deltas.length
   let newContent = `[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)\r\n/u/${user} has received ${flairCount} delta${flairCount === 1 ? '': 's'} for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n`
   _.forEachRight(hiddenParams.deltas, col => {
     const { b, dc, t, ab, uu } = col
@@ -444,4 +443,5 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
   }
   let response = await reddit.query({ URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(query) })
   if (response.error) throw Error(response.error)
+  return flairCount
 }
