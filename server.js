@@ -257,7 +257,6 @@ const createWikiHiddenParams = async (content) => {
         })
         setTimeout(() => rej(), 60000)
       })
-      hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
       return hiddenParams
     }
     return hiddenParams
@@ -427,6 +426,7 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
     ab: author,
     uu: createdUTC,
   })
+  hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
   const flairCount = hiddenParams.deltas.length
   let newContent = `[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)\r\n/u/${user} has received ${flairCount} delta${flairCount === 1 ? '': 's'} for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n`
   _.forEachRight(hiddenParams.deltas, col => {
