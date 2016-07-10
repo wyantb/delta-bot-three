@@ -381,7 +381,8 @@ const checkMessagesforDeltas = async () => {
       comments.commentLinks = _.uniq(comments.commentLinks)
       const read = await reddit.query({ URL: `/api/read_message`, method: 'POST', body: stringify({ id: JSON.stringify(comments.names).replace(/"|\[|\]/g,'') }) })
       if (read.error) throw Error(read.error)
-      _.each(comments.commentLinks, async (commentLink, index) => {
+      for (let i = 0; i < comments.commentLinks.length; ++i) {
+        const commentLink = comments.commentLinks[i]
         const response = await reddit.query(`${commentLink}`)
         const { replies, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, created_utc, created } = _.get(response, '[1].data.children[0].data')
         const { title: link_title, url: link_url } = _.get(response, '[0].data.children[0].data')
@@ -392,7 +393,7 @@ const checkMessagesforDeltas = async () => {
         }, false)
         const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*?\/blockquote&gt;/,'').replace(/pre&gt;[^]*?\/pre&gt;/,'')
         if (!dbReplied && !!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comment)
-      })
+      }
     }
   } catch (err) {
     console.log('Error!'.red)
@@ -426,6 +427,7 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
     ab: author,
     uu: createdUTC,
   })
+  hiddenParams.deltas = _.uniqBy(hiddenParams.deltas, 'dc')
   hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
   const flairCount = hiddenParams.deltas.length
   let newContent = `[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)\r\n/u/${user} has received ${flairCount} delta${flairCount === 1 ? '': 's'} for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n`
