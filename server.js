@@ -130,7 +130,7 @@ const checkForDeltas = async () => {
       const { link_title, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, link_url, created_utc, created } = entry.data
       comments[index] = { link_title, link_id, author, body, body_html, edited, parent_id, id, name, author_flair_text, link_url, created_utc, created }
       const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*\/blockquote&gt;/,'').replace(/pre&gt;[^]*\/pre&gt;/,'')
-      if (!!removedBodyHTML.toLowerCase().match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comments[index])
+      if ((!!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ/) || !!removedBodyHTML.match(/!delta/i))) await verifyThenAward(comments[index])
     })
   } catch (err) {
     console.log('Error!'.red)
@@ -393,7 +393,7 @@ const checkMessagesforDeltas = async () => {
           return _.get(reply, 'data.author') === botUsername
         }, false)
         const removedBodyHTML = body_html.replace(/blockquote&gt;[^]*?\/blockquote&gt;/,'').replace(/pre&gt;[^]*?\/pre&gt;/,'')
-        if (!dbReplied && !!removedBodyHTML.toLowerCase().match(/&amp;#8710;|&#8710;|∆|Δ|!delta/)) await verifyThenAward(comment)
+        if (!dbReplied && (!!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ/) || !!removedBodyHTML.match(/!delta/i))) await verifyThenAward(comment)
       }
     }
   } catch (err) {
