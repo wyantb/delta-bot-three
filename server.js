@@ -336,7 +336,7 @@ const verifyThenAward = async (comment) => {
         query.text = `${rejected} ${query.text}`
       }
     }
-    query.text += `${i18n[locale].global}\n[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
+    query.text += `${i18n[locale].global}\n[.](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     let send = await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
     if (send.error) throw Error(send.error)
     const flattened = _.flattenDeep(send.jquery)
@@ -431,7 +431,7 @@ const addDeltaToWiki = async ({ createdUTC, user, linkTitle, id, linkURL, author
   hiddenParams.deltas = _.uniqBy(hiddenParams.deltas, 'dc')
   hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
   const flairCount = hiddenParams.deltas.length
-  let newContent = `[](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)\r\n/u/${user} has received ${flairCount} delta${flairCount === 1 ? '': 's'} for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n`
+  let newContent = `[.](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)\r\n/u/${user} has received ${flairCount} delta${flairCount === 1 ? '': 's'} for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n`
   _.forEachRight(hiddenParams.deltas, col => {
     const { b, dc, t, ab, uu } = col
     const date = new Date(uu * 1000)
