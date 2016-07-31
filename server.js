@@ -2,7 +2,11 @@
 Corner Cases
 Edited comments are not handled
 */
-
+setInterval(() => {
+  const now = Date.now()
+  if (now < last[0] + 1800000 || now < last[1] + 1800000) process.exit(1)
+}, 3600000)
+let last = []
 import 'colors'
 import _ from 'lodash'
 import promisify from 'promisify-node'
@@ -123,6 +127,7 @@ const getNewComments = async (recursiveList) => {
 }
 
 const checkForDeltas = async () => {
+  last[0] = Date.now()
   console.log('$')
   try {
     let comments = await getNewComments()
@@ -360,6 +365,7 @@ app
   .listen(6969)
 
 const checkMessagesforDeltas = async () => {
+  last[1] = Date.now()
   console.log('.')
   try {
     let unreadInboxResponse = await reddit.query(`/message/unread`)
