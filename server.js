@@ -2,6 +2,7 @@
 Corner Cases
 Edited comments are not handled
 */
+console.log(`server.js called!`.gray)
 setInterval(() => {
   const now = Date.now()
   if (now < last[0] + 1800000 || now < last[1] + 1800000) process.exit(1)
@@ -26,12 +27,14 @@ let lastParsedCommentIDs
 let lastParsedCommentID
 try {
   state = require('./state.json')
-  lastParsedCommentIDs = state.lastParsedCommentIDs || []
-  lastParsedCommentID = lastParsedCommentIDs[0] || null
+  lastParsedCommentIDs = state.lastParsedCommentIDs
+  lastParsedCommentID = lastParsedCommentIDs[0]
 } catch (err) {
+  console.log(`No or curropted state.json file! Starting from no state!`.gray)
   state = {}
+  lastParsedCommentIDs = []
+  lastParsedCommentID = null
 }
-console.log(`server.js called!`.gray)
 try {
   var credentials = require('./credentials')
 } catch (err) {
@@ -56,12 +59,12 @@ const reddit = new Reddit(credentials, packageJson.version)
 const entry = async (f) => {
   await reddit.connect()
   if (!lastParsedCommentID) {
-    let response = await reddit.query(`/r/${subreddit}/comments.json`, true)
-    for (let i = 0; i < 5; ++i) {
-      lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
-    }
-    await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
-    lastParsedCommentID = lastParsedCommentIDs[0]
+      let response = await reddit.query(`/r/${subreddit}/comments.json`, true)
+      for (let i = 0; i < 5; ++i) {
+        lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
+      }
+      await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+      lastParsedCommentID = lastParsedCommentIDs[0]
   }
   checkForDeltas()
   checkMessagesforDeltas()
