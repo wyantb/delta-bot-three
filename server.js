@@ -58,7 +58,8 @@ const subreddit = credentials.subreddit
 const botUsername = credentials.username
 const reddit = new Reddit(credentials, packageJson.version)
 
-const getNewComments = async (recursiveList = []) => {
+const getNewComments = async (recursiveList) => {
+  const dirtyRecursiveList = recursiveList || []
   let query = {}
   if (lastParsedCommentID) {
     query = { after: lastParsedCommentID }
@@ -92,7 +93,7 @@ const getNewComments = async (recursiveList = []) => {
   query = { before: lastParsedCommentID }
   let response = await reddit.query(`/r/${subreddit}/comments.json?${stringify(query)}`, true)
   if (response.error) throw Error(response.error)
-  const newRecursiveList = recursiveList.concat(response.data.children)
+  const newRecursiveList = dirtyRecursiveList.concat(response.data.children)
   const commentEntriesLength = response.data.children.length
   if (commentEntriesLength) {
     lastParsedCommentID = response.data.children[0].data.name
