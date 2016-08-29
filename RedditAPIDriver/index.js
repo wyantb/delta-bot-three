@@ -51,15 +51,25 @@ module.exports = class RedditAPIDriver {
     }
     return true
   }
-  async query(params, noOauth, wiki) {
+  async query(params, noOauth, wiki, count = 0) {
     try {
       return await new Promise(async (res, rej) => {
-        const retry = resRetry => {
+        let gotResponse
+        const retry = (resRetry, rejRetry, useCount) => {
           console.log('Retrying in 10 seconds! R_API')
-          setTimeout(async () => {
-            resRetry(await this.query(params, noOauth, wiki))
-          }, 10000)
+          if (useCount && count >= 5) rejRetry(Error('Something happened! There was 5 404s!'))
+          else {
+            setTimeout(async () => {
+              resRetry(await this.query(params, noOauth, wiki, count + 1))
+            }, 10000)
+          }
         }
+        setTimeout(() => {
+          if (!gotResponse) {
+            console.log('10 second timeout'.red)
+            retry(res, rej)
+          }
+        }, 10000)
         const headers = this.headers
         const headersNoAuth = this.headersNoAuth
         let response
@@ -79,6 +89,7 @@ module.exports = class RedditAPIDriver {
           response = await fetch(`${this.baseURL}${URL}`, { headers, method, body })
         }
         const statusCode = response.status
+        gotResponse = true
         if (statusCode !== 200 && !wiki) {
           console.log(await response.text())
           console.log(`Status Code: ${statusCode}`.red)
@@ -94,6 +105,8 @@ module.exports = class RedditAPIDriver {
           console.log('75 R_API')
           await this.connect({ type: 'GET_NEW_SESSION' })
           retry(res, rej)
+        } else if (statusCode === 404) {
+          retry(res, rej, true)
         } else {
           if (wiki) res(await response.text())
           retry(res, rej)
