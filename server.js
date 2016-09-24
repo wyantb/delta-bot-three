@@ -346,14 +346,6 @@ const verifyThenAward = async (comment) => {
       if (query.text.length) query.text += '\n\n'
       query.text += text
     }
-    if (body.length < 50) {
-      console.log(`BAILOUT body length, ${body.length}, is shorter than 50`)
-      let text = i18n[locale].noAward.littleText
-      issues.littleText = 1
-      text = text.replace(/PARENTUSERNAME/g, parentThing.author)
-      if (query.text.length) query.text += '\n\n'
-      query.text += text
-    }
     if (parentThing.author === botUsername) {
       console.log(`BAILOUT parent author, ${parentThing.author} is bot, ${botUsername}`)
       const text = i18n[locale].noAward.db3
@@ -369,6 +361,28 @@ const verifyThenAward = async (comment) => {
       query.text += text
     }
     const issueCount = Object.keys(issues).length
+    const rejected = i18n[locale].noAward.rejected
+    // if there are issues, append the issues i18n to the DeltaBot comment
+    if (issueCount) {
+      // if there are multiple issues, stick at the top that there are multiple issues
+      if (issueCount >= 2) {
+        let issueCi18n = i18n[locale].noAward.issueCount
+        issueCi18n = issueCi18n.replace(/ISSUECOUNT/g, issueCount)
+        query.text = `${rejected} ${issueCi18n}\n\n${query.text}`
+      } else {
+        query.text = `${rejected} ${query.text}`
+      }
+    // if there are no issues yet, then check for comment length. checking for this
+    // last allows it to be either the issues above or this one
+    } else if (body.length < 50) {
+      console.log(`BAILOUT body length, ${body.length}, is shorter than 50`)
+      let text = i18n[locale].noAward.littleText
+      issues.littleText = 1
+      text = text.replace(/PARENTUSERNAME/g, parentThing.author)
+      if (query.text.length) query.text += '\n\n'
+      query.text += text
+      query.text = `${rejected} ${query.text}`
+    }
     if (issueCount === 0) {
       console.log('THIS ONE IS GOOD. AWARD IT')
       let text = i18n[locale].awardDelta
@@ -387,15 +401,6 @@ const verifyThenAward = async (comment) => {
         }
       )
       await updateFlair({ name: parentThing.author, flairCount })
-    } else {
-      const rejected = i18n[locale].noAward.rejected
-      if (issueCount >= 2) {
-        let issueCi18n = i18n[locale].noAward.issueCount
-        issueCi18n = issueCi18n.replace(/ISSUECOUNT/g, issueCount)
-        query.text = `${rejected} ${issueCi18n}\n\n${query.text}`
-      } else {
-        query.text = `${rejected} ${query.text}`
-      }
     }
     query.text += `${i18n[locale].global}\n[.](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     const send = await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
