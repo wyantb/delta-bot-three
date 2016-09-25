@@ -30,7 +30,7 @@ class DeltaBoardsThree {
     // this method return a string that allows us to add metadata
     // to a listing without being seen by anybody other than DB3
     const stringifyObjectToBeHidden = input => (
-      `[.](HTTP://DB3PARAMSSTART\n${JSON.stringify(input, null, 2)}\nDB3PARAMSEND)`
+      `[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(input, null, 2)}\nDB3PARAMSEND)`
     )
 
     // get the date variables ready
@@ -264,28 +264,26 @@ ${hiddenParamedData}
 | :------: | ------ | :------: |
 ${mapDataToTable(dataReadyToBeUsed.monthly)}
 
-Last updated ${now.toLocaleString()}
-
-${hiddenParamedData}
+Last updated ${now.toLocaleString()}${hiddenParamedData}
 `
     let textToReplace
     try {
       textToReplace = sideBar.match(
           new RegExp(
-            '\\[\\.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND\\)' +
+            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND\\)' +
             '([^]+)' +
-            '\\[\\.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND\\)'
+            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND\\)'
           )
         )[1]
     } catch (err) {
-      sideBar += '[.](HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND)' +
+      sideBar += '[​](HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND)' +
         '([^]+)' +
-        '[.](HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND)'
+        '[​](HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND)'
       textToReplace = sideBar.match(
           new RegExp(
-            '\\[\\.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND\\)' +
+            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND\\)' +
             '([^]+)' +
-            '\\[\\.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND\\)'
+            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND\\)'
           )
         )[1]
     }
