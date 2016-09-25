@@ -292,7 +292,10 @@ ${hiddenParamedData}
 
     // replace the old deltaboards sidebar with the new one
     // also change &gt; to >
-    const newSideBarText = sideBar.replace(textToReplace, newTableToPutIn).replace(/&gt;/g, '>')
+    const newSideBarText = sideBar
+      .replace(textToReplace, newTableToPutIn)
+      .replace(/&gt;/g, '>')
+      .replace(/amp;#/g, '#')
     const currentAboutData = _.get(getAboutResponse, 'data')
 
     // start params
