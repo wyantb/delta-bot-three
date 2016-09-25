@@ -261,11 +261,10 @@ ${hiddenParamedData}
     const newTableToPutIn = `
 ###### **Monthly Deltaboard**
 
-
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
 ${mapDataToTable(dataReadyToBeUsed.monthly)}
-| |checked ${now.toLocaleString()}   ${now.toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1]}| |
+| |　checked ${now.toLocaleString()}　 ${now.toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1]}| |
 
 [See our other Deltaboards in the wiki!](/r/changemyview/wiki/deltaboards)${hiddenParamedData}
 `
