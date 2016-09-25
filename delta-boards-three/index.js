@@ -213,8 +213,6 @@ _____
 
 # Deltaboards
 
-Last updated ${now.toLocaleString()}
-
 **Daily**
 
 | Rank | Username | Deltas |
@@ -233,7 +231,9 @@ ${mapDataToTable(dataReadyToBeUsed.weekly)}
 | :------: | :------: | :------: |
 ${mapDataToTable(dataReadyToBeUsed.monthly)}
 
-${hiddenParamedData}
+checked ${now.toLocaleString()}
+
+${now.toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1]}${hiddenParamedData}
 `
 
     // define update wiki parameters
