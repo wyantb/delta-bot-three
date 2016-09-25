@@ -296,6 +296,7 @@ ${hiddenParamedData}
       .replace(textToReplace, newTableToPutIn)
       .replace(/&gt;/g, '>')
       .replace(/amp;#/g, '#')
+      .replace(/amp;\\/g, '\\')
     const currentAboutData = _.get(getAboutResponse, 'data')
 
     // start params
