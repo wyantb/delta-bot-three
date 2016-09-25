@@ -186,6 +186,9 @@ class DeltaBoardsThree {
     // hiddenParams the data
     const hiddenParamedData = stringifyObjectToBeHidden(dataReadyToBeUsed)
 
+    // declare the subreddit
+    const subreddit = this.credentials.subreddit
+
     // update the wiki section
 
     // first start by creating a method which converts the data to line tables
@@ -195,8 +198,10 @@ class DeltaBoardsThree {
         const rank = index + 1
         return (
           `| ${rank} | ${
-            rank === 1 ? `**/u/${username}**` : `/u/${username}`
-          } | [${deltaCount}∆](// "deltas received") |`
+            rank === 1 ?
+              `**[${username}](/r/${subreddit}/wiki/user/${username})**` :
+              `[${username}](/r/${subreddit}/wiki/user/${username})`
+          } | ${deltaCount} |`
         )
       })
       .join('\n')
@@ -213,19 +218,19 @@ Last updated ${now.toLocaleString()}
 **Daily**
 
 | Rank | Username | Deltas |
-| :------: | ------ | :------: |
+| :------: | :------: | :------: |
 ${mapDataToTable(dataReadyToBeUsed.daily)}
 
 **Weekly**
 
 | Rank | Username | Deltas |
-| :------: | ------ | :------: |
+| :------: | :------: | :------: |
 ${mapDataToTable(dataReadyToBeUsed.weekly)}
 
 **Monthly**
 
 | Rank | Username | Deltas |
-| :------: | ------ | :------: |
+| :------: | :------: | :------: |
 ${mapDataToTable(dataReadyToBeUsed.monthly)}
 
 ${hiddenParamedData}
@@ -237,9 +242,6 @@ ${hiddenParamedData}
       reason: 'updated deltaboards',
       content: wikiOutput,
     }
-
-    // declare the subreddit
-    const subreddit = this.credentials.subreddit
 
     // grab the api from this
     const { api } = this
@@ -257,14 +259,15 @@ ${hiddenParamedData}
 
     // create the string that will go into the sidebar
     const newTableToPutIn = `
-###### **Monthly Deltaboards**
+###### **Monthly Deltaboard**
 
 
 | Rank | Username | Deltas |
-| :------: | ------ | :------: |
+| :------: | :------: | :------: |
 ${mapDataToTable(dataReadyToBeUsed.monthly)}
+| |checked ${now.toLocaleString()}   ${now.toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1]}| |
 
-Last updated ${now.toLocaleString()}${hiddenParamedData}
+[See our other Deltaboards in the wiki!](/r/changemyview/wiki/deltaboards)${hiddenParamedData}
 `
     let textToReplace
     try {
