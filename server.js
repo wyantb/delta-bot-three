@@ -698,7 +698,7 @@ const checkMessagesforDeltas = async () => {
 
 const entry = async () => {
   try {
-/*    await reddit.connect()
+    await reddit.connect()
     if (!lastParsedCommentID) {
       const response = await reddit.query(`/r/${subreddit}/comments.json`, true)
       for (let i = 0; i < 5; ++i) {
@@ -708,7 +708,7 @@ const entry = async () => {
       lastParsedCommentID = lastParsedCommentIDs[0]
     }
     checkForDeltas()
-    checkMessagesforDeltas()*/
+    checkMessagesforDeltas()
   } catch (err) {
     console.error(err)
   }
