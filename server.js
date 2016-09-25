@@ -11,7 +11,9 @@ import fs from 'fs'
 import { stringify } from 'query-string'
 import bodyParser from 'koa-bodyparser'
 import Reddit from './RedditAPIDriver'
+import DeltaBoardsThree from './delta-boards-three'
 import i18n from './i18n'
+import parseHiddenParams from './parse-hidden-params'
 
 console.log('server.js called!'.gray)
 
@@ -118,18 +120,6 @@ const getNewComments = async (recursiveList) => {
       return newRecursiveList
     default :
       return false
-  }
-}
-
-const parseHiddenParams = string => {
-  try {
-    const hiddenSection = string.match(/DB3PARAMSSTART[^]+DB3PARAMSEND/)[0]
-    const stringParams = hiddenSection.slice(
-        'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length).replace(/&quot;/g, '"'
-    )
-    return JSON.parse(stringParams)
-  } catch (error) {
-    return false
   }
 }
 
@@ -708,7 +698,7 @@ const checkMessagesforDeltas = async () => {
 
 const entry = async () => {
   try {
-    await reddit.connect()
+/*    await reddit.connect()
     if (!lastParsedCommentID) {
       const response = await reddit.query(`/r/${subreddit}/comments.json`, true)
       for (let i = 0; i < 5; ++i) {
@@ -718,7 +708,32 @@ const entry = async () => {
       lastParsedCommentID = lastParsedCommentIDs[0]
     }
     checkForDeltas()
-    checkMessagesforDeltas()
+    checkMessagesforDeltas()*/
+  } catch (err) {
+    console.error(err)
+  }
+  try {
+    let deltaBoardsThreeCredentials
+    try {
+      deltaBoardsThreeCredentials = require('./delta-boards-three-credentials')
+    } catch (err) {
+      console.log('Missing credentials for delta-boards-three! Using base creds as fallback!'.red)
+      console.log(
+        'Please contact the author for credentials or create your own credentials json!'.red
+      )
+      console.log(`{
+      "username": "Your Reddit username",
+      "password": "Your Reddit password",
+      "clientID": "Your application ID",
+      "clientSecret": "Your application secret",
+      "subreddit": "Your subreddit to moderate"
+    }`.red)
+    }
+    const deltaBoardsThree = new DeltaBoardsThree({
+      credentials: deltaBoardsThreeCredentials,
+      version: packageJson.version,
+    })
+    deltaBoardsThree.initialStart()
   } catch (err) {
     console.error(err)
   }

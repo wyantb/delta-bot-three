@@ -7,7 +7,8 @@ import fs from 'fs'
 fs.readFile = promisify(fs.readFile)
 
 module.exports = class RedditAPIDriver {
-  constructor(credentials, version) {
+  constructor(credentials, version, sessionPath) {
+    this.sessionPath = sessionPath || './'
     this.credentials = credentials
     this.headers = {}
     this.baseURL = 'https://oauth.reddit.com'
@@ -29,10 +30,10 @@ module.exports = class RedditAPIDriver {
         body: formurlencoded({ grant_type: 'password', username, password }),
       })
       json = await res.json()
-      fs.writeFile('session.json', JSON.stringify(json, null, 2))
+      fs.writeFile(`${this.sessionPath}session.json`, JSON.stringify(json, null, 2))
     } else if (type === 'FIRST_CONNECTION') {
       try {
-        json = JSON.parse(await fs.readFile('session.json', 'utf-8'))
+        json = JSON.parse(await fs.readFile(`${this.sessionPath}session.json`, 'utf-8'))
       } catch (err) {
         return this.connect({ type: 'GET_NEW_SESSION' })
       }
