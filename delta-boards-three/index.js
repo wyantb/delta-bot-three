@@ -162,7 +162,7 @@ class DeltaBoardsThree {
     }
 
     // parse the data to be .map friendly
-    const dataReadyToBeUsed = {
+    const hiddenParams = {
       daily: _(deltaBoards.daily)
         .map((data, username) => _.assign({ username }, data))
         .sortBy(['deltaCount', 'newestDeltaTime'])
@@ -184,30 +184,110 @@ class DeltaBoardsThree {
     }
 
     // hiddenParams the data
-    const hiddenParamedData = stringifyObjectToBeHidden(dataReadyToBeUsed)
+    const stringifiedHiddenParams = stringifyObjectToBeHidden(hiddenParams)
 
     // declare the subreddit
     const subreddit = this.credentials.subreddit
 
-    // update the wiki section
+    // get the Date string ready
+    const parsedDate = `As of ${now.getMonth() + 1}/${now.getDate()}/` +
+    `${now.getFullYear().toString().slice(2)} ` +
+    `${_.padStart(now.getHours(), 2, 0)}:${_.padStart(now.getMinutes(), 2, 0)} ` +
+    `${now.toString().match(/\(([A-Za-z\s].*)\)/)[1]}`
 
-    // first start by creating a method which converts the data to line tables
-    const mapDataToTable = data => _(data)
-      .map((line, index) => {
-        const { deltaCount, username } = line
-        const rank = index + 1
-        return (
-          `| ${rank} | ${
-            rank === 1 ?
-              `**[${username}](/r/${subreddit}/wiki/user/${username})**` :
-              `[${username}](/r/${subreddit}/wiki/user/${username})`
-          } | ${deltaCount} |`
+    // check if wiki and sidebar need to be updated
+    try {
+      // first start by creating a method which converts the data to line tables
+      const mapDataToTable = data => _(data)
+        .map((line, index) => {
+          const { deltaCount, username } = line
+          const rank = index + 1
+          return (
+            `| ${rank} | ${
+              rank === 1 ?
+                `**[${username}](/r/${subreddit}/wiki/user/${username})**` :
+                `[${username}](/r/${subreddit}/wiki/user/${username})`
+            } | ${deltaCount} |`
+          )
+        })
+        .join('\n')
+
+      // update the sidebar section
+
+      // grab the api from this
+      const { api } = this
+
+      // get the sidebar data
+      const getAboutResponse = await api.query(`/r/${subreddit}/about`)
+      let sideBar = _.get(getAboutResponse, 'data.description')
+
+      // create the string that will go into the sidebar
+      const newTableToPutIn = `
+###### **Monthly Deltaboard**
+
+| Rank | Username | Deltas |
+| :------: | :------: | :------: |
+${mapDataToTable(hiddenParams.monthly)}
+| |${parsedDate}| |
+| |[More Deltaboards](/r/${subreddit}/wiki/deltaboards)| |
+${stringifiedHiddenParams}`
+      let textToReplace
+      try {
+        textToReplace = sideBar.match(
+            new RegExp(
+              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
+              '([^]+)' +
+              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
+            )
+          )[1]
+      } catch (err) {
+        sideBar += '[​](HTTP://DB3 AUTO UPDATES START HERE)' +
+          '([^]+)' +
+          '[​](HTTP://DB3 AUTO UPDATES END HERE)'
+        textToReplace = sideBar.match(
+            new RegExp(
+              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
+              '([^]+)' +
+              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
+            )
+          )[1]
+      }
+
+      // if the monthly data has changed, update the sidebar
+      if (!_.isEqual(parseHiddenParams(textToReplace).monthly, hiddenParams.monthly)) {
+        // replace the old deltaboards sidebar with the new one
+        // also change &gt; to >
+        const newSideBarText = sideBar
+          .replace(textToReplace, newTableToPutIn)
+          .replace(/&gt;/g, '>')
+          .replace(/amp;#/g, '#')
+          .replace(/amp;\\/g, '\\')
+        const currentAboutData = _.get(getAboutResponse, 'data')
+
+        // start params
+        const updateSideBarQuery = _.assign({}, currentAboutData, {
+          description: newSideBarText,
+          sr: currentAboutData.name,
+          allow_top: true,
+          domain: null,
+          exclude_banned_modqueue: false,
+          link_type: 'any',
+          type: currentAboutData.subreddit_type,
+          wikimode: 'modonly',
+        })
+
+        // updateSideBar
+        await api.query(
+          { URL: '/api/site_admin', method: 'POST', body: stringify(updateSideBarQuery) }
         )
-      })
-      .join('\n')
+      } else console.log('Monthly Deltaboard data hasn\'t changed. Won\'t update the sidebar')
 
-    // create the wiki output
-    const wikiOutput = `[**&#8656; back to main wiki page**](http://reddit.com/r/changemyview/wiki)
+      // update the wiki section
+
+      // if any data has changed, update the sidebar
+      if (!_.isEqual(parseHiddenParams(textToReplace), hiddenParams)) {
+        // create the wiki output
+        const wikiOutput = `[**&#8656; back to main wiki page**](http://reddit.com/r/${subreddit}/wiki)
 
 _____
 
@@ -217,104 +297,38 @@ _____
 
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
-${mapDataToTable(dataReadyToBeUsed.daily)}
+${mapDataToTable(hiddenParams.daily)}
 
 **Weekly**
 
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
-${mapDataToTable(dataReadyToBeUsed.weekly)}
+${mapDataToTable(hiddenParams.weekly)}
 
 **Monthly**
 
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
-${mapDataToTable(dataReadyToBeUsed.monthly)}
+${mapDataToTable(hiddenParams.monthly)}
 
-checked ${now.toLocaleString()}
-
-${now.toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1]}${hiddenParamedData}
+${parsedDate}
 `
 
-    // define update wiki parameters
-    const updateWikiQuery = {
-      page: 'deltaboards',
-      reason: 'updated deltaboards',
-      content: wikiOutput,
+        // define update wiki parameters
+        const updateWikiQuery = {
+          page: 'deltaboards',
+          reason: 'updated deltaboards',
+          content: wikiOutput,
+        }
+
+        // updateWikiResponse
+        await api.query(
+          { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) }
+        )
+      } else console.log('No Deltaboard data has changed. Won\'t update the wiki')
+    } catch (error) {
+      console.log(error)
     }
-
-    // grab the api from this
-    const { api } = this
-
-    // updateWikiResponse
-    await api.query(
-        { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) }
-    )
-
-    // update the sidebar section
-
-    // get the sidebar data
-    const getAboutResponse = await api.query(`/r/${subreddit}/about`)
-    let sideBar = _.get(getAboutResponse, 'data.description')
-
-    // create the string that will go into the sidebar
-    const newTableToPutIn = `
-###### **Monthly Deltaboard**
-
-| Rank | Username | Deltas |
-| :------: | :------: | :------: |
-${mapDataToTable(dataReadyToBeUsed.monthly)}
-| |　checked ${now.toLocaleString()}　 ${now.toString().match(/([A-Z]+[\+-][0-9]+.*)/)[1]}| |
-
-[See our other Deltaboards in the wiki!](/r/changemyview/wiki/deltaboards)${hiddenParamedData}
-`
-    let textToReplace
-    try {
-      textToReplace = sideBar.match(
-          new RegExp(
-            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND\\)' +
-            '([^]+)' +
-            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND\\)'
-          )
-        )[1]
-    } catch (err) {
-      sideBar += '[​](HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND)' +
-        '([^]+)' +
-        '[​](HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND)'
-      textToReplace = sideBar.match(
-          new RegExp(
-            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES START HERE DB3PARAMSEND\\)' +
-            '([^]+)' +
-            '\\[.\\]\\(HTTP://DB3PARAMSSTART DB3 AUTO UPDATES END HERE DB3PARAMSEND\\)'
-          )
-        )[1]
-    }
-
-    // replace the old deltaboards sidebar with the new one
-    // also change &gt; to >
-    const newSideBarText = sideBar
-      .replace(textToReplace, newTableToPutIn)
-      .replace(/&gt;/g, '>')
-      .replace(/amp;#/g, '#')
-      .replace(/amp;\\/g, '\\')
-    const currentAboutData = _.get(getAboutResponse, 'data')
-
-    // start params
-    const updateSideBarQuery = _.assign({}, currentAboutData, {
-      description: newSideBarText,
-      sr: currentAboutData.name,
-      allow_top: true,
-      domain: null,
-      exclude_banned_modqueue: false,
-      link_type: 'any',
-      type: currentAboutData.subreddit_type,
-      wikimode: 'modonly',
-    })
-
-    // updateSideBar
-    await api.query(
-      { URL: '/api/site_admin', method: 'POST', body: stringify(updateSideBarQuery) }
-    )
 
     // set the timeout here in case it takes long or hangs,
     // so it doesn't fire off multiple time at once
