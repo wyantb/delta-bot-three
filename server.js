@@ -14,6 +14,7 @@ import Reddit from './RedditAPIDriver'
 import DeltaBoardsThree from './delta-boards-three'
 import i18n from './i18n'
 import parseHiddenParams from './parse-hidden-params'
+import getWikiContent from './get-wiki-content'
 
 console.log('server.js called!'.gray)
 
@@ -132,16 +133,6 @@ const addOrRemoveDeltaToOrFromWiki = async ({
   author,
   action,
 }) => { // returns flair count
-  const getWikiContent = async (url) => {
-    try {
-      const resp = await reddit.query(`/r/${subreddit}/wiki/${url}`, true, true)
-      return resp.match(
-          /<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/
-      )[0].replace(/<textarea readonly class="source" rows="20" cols="20">|<\/textarea>/g, '')
-    } catch (err) {
-      return false
-    }
-  }
   const createWikiHiddenParams = async (content) => {
     try {
       const hiddenParams = {
@@ -233,7 +224,11 @@ const addOrRemoveDeltaToOrFromWiki = async ({
       }
     }
   }
-  let content = await getWikiContent(`user/${user}`)
+  let content = await getWikiContent({
+    api: reddit,
+    wikiPage: `user/${user}`,
+    subreddit,
+  })
   // First, find all wiki pages and combine for parsing
   if (content && content.indexOf('Any delta history before February 2015 can be found at') > -1) {
     const oldContent = await getWikiContent(`userhistory/user/${user}`)

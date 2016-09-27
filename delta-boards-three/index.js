@@ -2,6 +2,7 @@ import _ from 'lodash'
 import { stringify } from 'query-string'
 import Api from './../RedditAPIDriver'
 import parseHiddenParams from './../parse-hidden-params'
+import getWikiContent from './../get-wiki-content'
 
 class DeltaBoardsThree {
   constructor({ credentials, version }) {
@@ -101,11 +102,11 @@ class DeltaBoardsThree {
         const childDateDayOfTheMonth = childDate.getDate()
         const childMonth = childDate.getMonth()
         const childYear = childDate.getFullYear()
-        const hiddenParams = parseHiddenParams(body)
+        const newHiddenParams = parseHiddenParams(body)
 
         // continue only if hidden params
-        if (hiddenParams) {
-          const { issues, parentUserName } = hiddenParams
+        if (newHiddenParams) {
+          const { issues, parentUserName } = newHiddenParams
           const issueCount = Object.keys(issues).length
 
           // waterfall add deltas to the objects if it is a valid delta
@@ -166,7 +167,7 @@ class DeltaBoardsThree {
     }
 
     // parse the data to be .map friendly
-    const hiddenParams = {
+    const newHiddenParams = {
       daily: _(deltaBoards.daily)
         .map((data, username) => _.assign({ username }, data))
         .sortBy(['deltaCount', 'newestDeltaTime'])
@@ -187,8 +188,8 @@ class DeltaBoardsThree {
         .value(),
     }
 
-    // hiddenParams the data
-    const stringifiedHiddenParams = stringifyObjectToBeHidden(hiddenParams)
+    // newHiddenParams the data
+    const stringifiedNewHiddenParams = stringifyObjectToBeHidden(newHiddenParams)
 
     // declare the subreddit
     const subreddit = this.credentials.subreddit
@@ -216,49 +217,49 @@ class DeltaBoardsThree {
         })
         .join('\n')
 
-      // update the sidebar section
-
       // grab the api from this
       const { api } = this
 
-      // get the sidebar data
-      const getAboutResponse = await api.query(`/r/${subreddit}/about`)
-      let sideBar = _.get(getAboutResponse, 'data.description')
+      // grab the newHiddenParams from the wiki page
+      const deltaBoardsWikiContent = await getWikiContent({ api, subreddit, wikiPage: 'deltaboards' })
+      const oldHiddenParams = parseHiddenParams(deltaBoardsWikiContent)
 
-      // create the string that will go into the sidebar
-      const newTableToPutIn = `
+      // if the monthly data has changed, update the sidebar
+      if (!_.isEqual(_.get(oldHiddenParams, 'monthly'), newHiddenParams.monthly)) {
+        // get the current sidebar data
+        const getAboutResponse = await api.query(`/r/${subreddit}/about`)
+        let sideBar = _.get(getAboutResponse, 'data.description')
+
+        // create the string that will go into the sidebar
+        const newTableToPutIn = `
 ###### **Monthly Deltaboard**
 
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
-${mapDataToTable(hiddenParams.monthly)}
+${mapDataToTable(newHiddenParams.monthly)}
 | |${parsedDate}| |
-| |[More Deltaboards](/r/${subreddit}/wiki/deltaboards)| |
-${stringifiedHiddenParams}`
-      let textToReplace
-      try {
-        textToReplace = sideBar.match(
-            new RegExp(
-              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
-              '([^]+)' +
-              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
-            )
-          )[1]
-      } catch (err) {
-        sideBar += '[​](HTTP://DB3 AUTO UPDATES START HERE)' +
-          '([^]+)' +
-          '[​](HTTP://DB3 AUTO UPDATES END HERE)'
-        textToReplace = sideBar.match(
-            new RegExp(
-              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
-              '([^]+)' +
-              '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
-            )
-          )[1]
-      }
-
-      // if the monthly data has changed, update the sidebar
-      if (!_.isEqual(parseHiddenParams(textToReplace).monthly, hiddenParams.monthly)) {
+| |[More Deltaboards](/r/${subreddit}/wiki/deltaboards)| |`
+        let textToReplace
+        try {
+          textToReplace = sideBar.match(
+              new RegExp(
+                '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
+                '([^]+)' +
+                '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
+              )
+            )[1]
+        } catch (err) {
+          sideBar += '[​](HTTP://DB3 AUTO UPDATES START HERE)' +
+            '([^]+)' +
+            '[​](HTTP://DB3 AUTO UPDATES END HERE)'
+          textToReplace = sideBar.match(
+              new RegExp(
+                '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
+                '([^]+)' +
+                '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
+              )
+            )[1]
+        }
         // replace the old deltaboards sidebar with the new one
         // also change &gt; to >
         const newSideBarText = sideBar
@@ -286,10 +287,8 @@ ${stringifiedHiddenParams}`
         )
       } else console.log('Monthly Deltaboard data hasn\'t changed. Won\'t update the sidebar')
 
-      // update the wiki section
-
-      // if any data has changed, update the sidebar
-      if (!_.isEqual(parseHiddenParams(textToReplace), hiddenParams)) {
+      // if any data has changed, update the wiki
+      if (!_.isEqual(oldHiddenParams, newHiddenParams)) {
         // create the wiki output
         const wikiOutput = `[**&#8656; back to main wiki page**](http://reddit.com/r/${subreddit}/wiki)
 
@@ -301,21 +300,21 @@ _____
 
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
-${mapDataToTable(hiddenParams.daily)}
+${mapDataToTable(newHiddenParams.daily)}
 
 **Weekly**
 
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
-${mapDataToTable(hiddenParams.weekly)}
+${mapDataToTable(newHiddenParams.weekly)}
 
 **Monthly**
 
 | Rank | Username | Deltas |
 | :------: | :------: | :------: |
-${mapDataToTable(hiddenParams.monthly)}
+${mapDataToTable(newHiddenParams.monthly)}
 
-${parsedDate}
+${parsedDate}${stringifiedNewHiddenParams}
 `
 
         // define update wiki parameters
