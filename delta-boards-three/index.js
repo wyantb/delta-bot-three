@@ -102,51 +102,55 @@ class DeltaBoardsThree {
         const childMonth = childDate.getMonth()
         const childYear = childDate.getFullYear()
         const hiddenParams = parseHiddenParams(body)
-        const { issues, parentUserName } = hiddenParams
-        const issueCount = Object.keys(issues).length
 
-        // waterfall add deltas to the objects if it is a valid delta
-        if (issueCount === 0) {
-          // set up the waterfall delta date check
-          switch (true) {
-            // add to daily boards object
-            case (nowDayOfTheMonth === childDateDayOfTheMonth): // daily boards
-              const { daily } = deltaBoards
-              addDelta({
-                board: daily,
-                username: parentUserName,
-                time: createdUtc,
-              })
-            // add to weekly boards object
-            case (
-              nowMonth === childMonth &&
-              childDateDayOfTheMonth >= (nowDayOfTheMonth - nowDayOfTheWeek)
-            ): // weekly boards
-              const { weekly } = deltaBoards
-              addDelta({
-                board: weekly,
-                username: parentUserName,
-                time: createdUtc,
-              })
-            // add to monthly boards object
-            case (nowMonth === childMonth): // monthly boards
-              const { monthly } = deltaBoards
-              addDelta({
-                board: monthly,
-                username: parentUserName,
-                time: createdUtc,
-              })
-            // add to yearly boards object
-            case (nowYear === childYear): // yearly boards
-              const { yearly } = deltaBoards
-              addDelta({
-                board: yearly,
-                username: parentUserName,
-                time: createdUtc,
-              })
-              break
-            default:
-              break
+        // continue only if hidden params
+        if (hiddenParams) {
+          const { issues, parentUserName } = hiddenParams
+          const issueCount = Object.keys(issues).length
+
+          // waterfall add deltas to the objects if it is a valid delta
+          if (issueCount === 0) {
+            // set up the waterfall delta date check
+            switch (true) {
+              // add to daily boards object
+              case (nowDayOfTheMonth === childDateDayOfTheMonth): // daily boards
+                const { daily } = deltaBoards
+                addDelta({
+                  board: daily,
+                  username: parentUserName,
+                  time: createdUtc,
+                })
+              // add to weekly boards object
+              case (
+                nowMonth === childMonth &&
+                childDateDayOfTheMonth >= (nowDayOfTheMonth - nowDayOfTheWeek)
+              ): // weekly boards
+                const { weekly } = deltaBoards
+                addDelta({
+                  board: weekly,
+                  username: parentUserName,
+                  time: createdUtc,
+                })
+              // add to monthly boards object
+              case (nowMonth === childMonth): // monthly boards
+                const { monthly } = deltaBoards
+                addDelta({
+                  board: monthly,
+                  username: parentUserName,
+                  time: createdUtc,
+                })
+              // add to yearly boards object
+              case (nowYear === childYear): // yearly boards
+                const { yearly } = deltaBoards
+                addDelta({
+                  board: yearly,
+                  username: parentUserName,
+                  time: createdUtc,
+                })
+                break
+              default:
+                break
+            }
           }
         }
 
