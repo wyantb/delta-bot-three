@@ -3,6 +3,7 @@ import formurlencoded from 'form-urlencoded'
 import fetch from 'node-fetch'
 import promisify from 'promisify-node'
 import fs from 'fs'
+import _ from 'lodash'
 
 fs.readFile = promisify(fs.readFile)
 
@@ -99,6 +100,14 @@ module.exports = class RedditAPIDriver {
           try {
             if (wiki) res(await response.text())
             else res(await response.json())
+            const rateHeaders = _.pick(
+              response.headers.raw(), [
+                'x-ratelimit-used',
+                'x-ratelimit-remaining',
+                'x-ratelimit-reset',
+              ]
+            )
+            if (Object.keys(headers).length) console.log(rateHeaders)
           } catch (error) {
             retry(res, rej)
           }
