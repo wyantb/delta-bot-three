@@ -3,7 +3,7 @@
 The third rewrite of delta bot. This bot will be written in NodeJS.
 
 ## Contributing
-Any contributions are much appreciated. Please keep your PRs to 1 commit and put the issue number in the beggining if your commit message if it is associated with one.
+Any contributions are much appreciated. Please keep your PRs to 1 commit and put the issue number in the beginning of your commit message if it is associated with one.
 
 ## Roadmap
 ### The first three months ✓
