@@ -7,10 +7,10 @@ Any contributions are much appreciated. Please keep your PRs to 1 commit and put
 
 ## Roadmap
 ### The first three months ✓
-* Rewrite what DeltaBot currently does and migrate all old data over.
+* Rewrite what DeltaBot currently does and migrate all old data over. ✓
 
 ### To-Do
-* Have DeltaBot automatically rescan edited comments #4
-* Solve the missing deltas issue (Quick Fix: #35, Ideal Scenario: #33)
-* Implement first-time-delta PMs #14
-* Then the remaining issues in any order: https://github.com/MystK/delta-bot-three/issues
+* Have DeltaBot automatically rescan edited comments #4.
+* Solve the missing deltas issue (Quick Fix: #35, Ideal Scenario: #33).
+* Implement first-time-delta PMs #14.
+* Then the remaining issues in any order: https://github.com/MystK/delta-bot-three/issues.
