@@ -346,7 +346,7 @@ const verifyThenAward = async (comment) => {
       if (query.text.length) query.text += '\n\n'
       query.text += text
     }
-    const issueCount = Object.keys(issues).length
+    let issueCount = Object.keys(issues).length
     const rejected = i18n[locale].noAward.rejected
     // if there are issues, append the issues i18n to the DeltaBot comment
     if (issueCount) {
@@ -369,6 +369,7 @@ const verifyThenAward = async (comment) => {
       query.text += text
       query.text = `${rejected} ${query.text}`
     }
+    issueCount = Object.keys(issues).length
     if (issueCount === 0) {
       console.log('THIS ONE IS GOOD. AWARD IT')
       const flairCount = await addOrRemoveDeltaToOrFromWiki(
