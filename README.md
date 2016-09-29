@@ -15,4 +15,5 @@ Any contributions are much appreciated. Please keep your PRs to 1 commit and put
 * Implement first-time-delta PMs [#14](https://github.com/MystK/delta-bot-three/issues/14).
 * Yearly Deltaboard [#36](https://github.com/MystK/delta-bot-three/issues/36).
 * All-Time Deltaboard [#34](https://github.com/MystK/delta-bot-three/issues/34).
+* Admin Interface [#38](https://github.com/MystK/delta-bot-three/issues/38).
 * The remaining issues in any order: https://github.com/MystK/delta-bot-three/issues
