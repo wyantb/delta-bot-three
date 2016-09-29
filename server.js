@@ -316,6 +316,7 @@ const verifyThenAward = async (comment) => {
     const parentThing = json[1].data.children[0].data
     const listing = json[0].data.children[0].data
     if (parentThing.author === '[deleted]') return true
+    if (author === botUsername) return true
     hiddenParams.parentUserName = parentThing.author
     if (
         (
@@ -331,7 +332,6 @@ const verifyThenAward = async (comment) => {
       if (query.text.length) query.text += '\n\n'
       query.text += text
     }
-    if (author === botUsername) return true
     if (parentThing.author === botUsername) {
       console.log(`BAILOUT parent author, ${parentThing.author} is bot, ${botUsername}`)
       const text = i18n[locale].noAward.db3
