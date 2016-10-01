@@ -5,6 +5,7 @@ The third rewrite of delta bot. This bot will be written in NodeJS.
 ## Contributing
 Any contributions are much appreciated. Please keep your PRs to 1 commit and put the issue number in the beginning of your commit message if it is associated with one.
 ### How to build
+1. download nvm. Mac/Linux: https://github.com/creationix/nvm Windows: https://github.com/coreybutler/nvm-windows/releases/download/1.1.1/nvm-setup.zip
 1. `git clone https://github.com/MystK/delta-bot-three.git`
 1. `cd delta-bot-three`
 1. Mac/Linux: `nvm install && nvm use ` Windows: Look inside the .nvmrc folder to find the version. EX: 5.8.0 is the version. `nvm install 5.8.0 && nvm use 5.8.0`
