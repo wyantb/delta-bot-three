@@ -227,7 +227,7 @@ class DeltaBoardsThree {
       // if the monthly data has changed, update the sidebar
       if (!_.isEqual(_.get(oldHiddenParams, 'monthly'), newHiddenParams.monthly)) {
         // get the current sidebar data
-        const getAboutResponse = await api.query(`/r/${subreddit}/about`)
+        const getAboutResponse = await api.query(`/r/${subreddit}/about/edit`)
         let sideBar = _.get(getAboutResponse, 'data.description')
 
         // create the string that will go into the sidebar
@@ -272,7 +272,9 @@ ${mapDataToTable(newHiddenParams.monthly)}
         // start params
         const updateSideBarQuery = _.assign({}, currentAboutData, {
           description: newSideBarText,
-          sr: currentAboutData.name,
+          sr: currentAboutData.subreddit_id,
+          type: currentAboutData.subreddit_type,
+          link_type: currentAboutData.content_options,
         })
 
         // updateSideBar
