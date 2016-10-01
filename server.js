@@ -715,16 +715,20 @@ const entry = async () => {
       deltaBoardsThreeCredentials = require('./delta-boards-three-credentials')
     } catch (err) {
       console.log('Missing credentials for delta-boards-three! Using base creds as fallback!'.red)
-      console.log(
-        'Please contact the author for credentials or create your own credentials json!'.red
-      )
-      console.log(`{
-      "username": "Your Reddit username",
-      "password": "Your Reddit password",
-      "clientID": "Your application ID",
-      "clientSecret": "Your application secret",
-      "subreddit": "Your subreddit to moderate"
-    }`.red)
+      try {
+        deltaBoardsThreeCredentials = require('./credentials')
+      } catch (err) {
+        console.log(
+          'Please contact the author for credentials or create your own credentials json!'.red
+        )
+        console.log(`{
+          "username": "Your Reddit username",
+          "password": "Your Reddit password",
+          "clientID": "Your application ID",
+          "clientSecret": "Your application secret",
+          "subreddit": "Your subreddit to moderate"
+        }`.red)
+      }
     }
     const deltaBoardsThree = new DeltaBoardsThree({
       credentials: deltaBoardsThreeCredentials,
