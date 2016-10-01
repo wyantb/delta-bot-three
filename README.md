@@ -4,6 +4,25 @@ The third rewrite of delta bot. This bot will be written in NodeJS.
 
 ## Contributing
 Any contributions are much appreciated. Please keep your PRs to 1 commit and put the issue number in the beginning of your commit message if it is associated with one.
+### How to build
+1. `git clone https://github.com/MystK/delta-bot-three.git`
+1. `cd delta-bot-three`
+1. Mac/Linux: `nvm install && nvm use ` Windows: Look inside the .nvmrc folder to find the version. EX: 5.8.0 is the version. `nvm install 5.8.0 && nvm use 5.8.0`
+1. create a subreddit
+1. get a Reddit API key by going to https://www.reddit.com/prefs/apps/ => create another app => https://i.imgur.com/xMUa521.png
+1. create a `credentials.json` that looks like below
+1. `npm start` and it should work
+
+#### credentials.json
+````
+{
+  "username": "DeltaBot3",
+  "password": "PASSWORDHERE",
+  "clientID": "ebwS927PijoFvg",
+  "clientSecret": "X3-3cVNFx3Nd8_NYUrOuvmaf7wM",
+  "subreddit": "YOURnewSUBREDDIThere"
+}
+````
 
 ### A special thanks to everyone who contributed
 _Please add yourself to this list if you've contributed content to this effort_
