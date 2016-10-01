@@ -273,12 +273,6 @@ ${mapDataToTable(newHiddenParams.monthly)}
         const updateSideBarQuery = _.assign({}, currentAboutData, {
           description: newSideBarText,
           sr: currentAboutData.name,
-          allow_top: true,
-          domain: null,
-          exclude_banned_modqueue: false,
-          link_type: 'any',
-          type: currentAboutData.subreddit_type,
-          wikimode: 'modonly',
         })
 
         // updateSideBar
