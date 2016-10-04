@@ -171,20 +171,17 @@ class DeltaBoardsThree {
     const newHiddenParams = {
       daily: _(deltaBoards.daily)
         .map((data, username) => _.assign({ username }, data))
-        .sortBy(['deltaCount', 'newestDeltaTime'])
-        .reverse()
+        .orderBy(['deltaCount', 'newestDeltaTime'], ['desc', 'asc'])
         .take(10)
         .value(),
       weekly: _(deltaBoards.weekly)
         .map((data, username) => _.assign({ username }, data))
-        .sortBy(['deltaCount', 'newestDeltaTime'])
-        .reverse()
+        .orderBy(['deltaCount', 'newestDeltaTime'], ['desc', 'asc'])
         .take(10)
         .value(),
       monthly: _(deltaBoards.monthly)
         .map((data, username) => _.assign({ username }, data))
-        .sortBy(['deltaCount', 'newestDeltaTime'])
-        .reverse()
+        .orderBy(['deltaCount', 'newestDeltaTime'], ['desc', 'asc'])
         .take(10)
         .value(),
     }
