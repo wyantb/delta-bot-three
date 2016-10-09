@@ -285,9 +285,25 @@ const updateFlair = async ({ name, flairCount }) => {
     text: `${flairCount}∆`,
   }
   const response = await reddit.query(
-      { URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' }
+    { URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' }
   )
   if (response.error) throw Error(response.error)
+  return true
+}
+
+const introductoryTemplate = _.template(i18n[locale].firstDeltaMessage)
+const sendIntroductoryMessage = async ({ username, flairCount }) => {
+  if (flairCount === 1) {
+    const introMessageContent = {
+      to: username,
+      subject: i18n[locale].firstDeltaSubject,
+      text: introductoryTemplate({ username, subreddit }),
+    }
+    const response = await reddit.query(
+      { URL: `/r/${subreddit}/api/compose?${stringify(introMessageContent)}`, method: 'POST' }
+    )
+    if (response.error) throw Error(response.error)
+  }
   return true
 }
 
@@ -395,6 +411,7 @@ const verifyThenAward = async (comment) => {
       if (query.text.length) query.text += '\n\n'
       query.text += text
       await updateFlair({ name: parentThing.author, flairCount })
+      await sendIntroductoryMessage({ username: parentThing.author, flairCount })
     }
     // eslint-disable-next-line
     query.text += `${i18n[locale].global}\n[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
