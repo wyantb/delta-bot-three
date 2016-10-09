@@ -5,13 +5,13 @@ The third rewrite of delta bot. This bot will be written in NodeJS.
 ## Contributing
 Any contributions are much appreciated. Please keep your PRs to 1 commit and put the issue number in the beginning of your commit message if it is associated with one.
 ### How to build
-1. download nvm. Mac/Linux: https://github.com/creationix/nvm Windows: https://github.com/coreybutler/nvm-windows/releases/download/1.1.1/nvm-setup.zip
+1. Download nvm. Mac/Linux: https://github.com/creationix/nvm Windows: https://github.com/coreybutler/nvm-windows/releases/download/1.1.1/nvm-setup.zip
 1. `git clone https://github.com/MystK/delta-bot-three.git`
 1. `cd delta-bot-three`
 1. Mac/Linux: `nvm install && nvm use ` Windows: Look inside the .nvmrc folder to find the version. EX: 5.8.0 is the version. `nvm install 5.8.0 && nvm use 5.8.0`
-1. create a subreddit.  after creation, ensure that "mod editing" for the subreddit's wiki is enabled, and make you bot account a moderator for the subreddit
-1. get a Reddit API key by going to https://www.reddit.com/prefs/apps/ => create another app => https://i.imgur.com/xMUa521.png
-1. create a `credentials.json` that looks like below
+1. Create a subreddit.  after creation, ensure that "mod editing" for the subreddit's wiki is enabled, and make you bot account a moderator for the subreddit
+1. Get a Reddit API key by going to https://www.reddit.com/prefs/apps/ => create another app => https://i.imgur.com/xMUa521.png
+1. Create a `credentials.json` that looks like below
 1. `npm start` and it should work
 1. Commit messages should follow the [AngularJS](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit) commit guidelines
 1. Before submitting any pull request, ensure that `npm run test` passes with no errors
@@ -29,7 +29,7 @@ Any contributions are much appreciated. Please keep your PRs to 1 commit and put
 
 ### A special thanks to everyone who contributed
 _Please add yourself to this list if you've contributed content to this effort_
-* @roastchicken
+* [roastchicken](https://github.com/roastchicken)
 * [wyantb](https://github.com/wyantb)
 
 ## Roadmap
