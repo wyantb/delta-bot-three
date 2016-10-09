@@ -31,6 +31,7 @@ Any contributions are much appreciated. Please keep your PRs to 1 commit and put
 _Please add yourself to this list if you've contributed content to this effort_
 * [roastchicken](https://github.com/roastchicken)
 * [wyantb](https://github.com/wyantb)
+* [stedop](https://github.com/stedop)
 
 ## Roadmap
 ### The first three months ✓
