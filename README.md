@@ -28,7 +28,7 @@ Any contributions are much appreciated. Please keep your PRs to 1 commit and put
 ````
 
 ### A special thanks to everyone who contributed
-_Please add yourself to this list if you've contributed content to this effort_
+_Please add yourself to this list if you've contributed:_
 * [MystK](https://github.com/mystk)
 * [roastchicken](https://github.com/roastchicken)
 * [wyantb](https://github.com/wyantb)
