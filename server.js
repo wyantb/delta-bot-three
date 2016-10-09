@@ -16,9 +16,7 @@ import i18n from './i18n'
 import parseHiddenParams from './parse-hidden-params'
 import getWikiContent from './get-wiki-content'
 
-const isDebug = _.some(process.argv, arg => {
-  return arg === '--debug'
-})
+const isDebug = _.some(process.argv, arg => arg === '--debug')
 if (isDebug) {
   console.log('server.js called!  running in debug mode')
 }
@@ -256,6 +254,7 @@ const addOrRemoveDeltaToOrFromWiki = async ({
   hiddenParams.deltas = _.uniqBy(hiddenParams.deltas, 'dc')
   hiddenParams.deltas = _.sortBy(hiddenParams.deltas, ['uu'])
   const flairCount = hiddenParams.deltas.length
+  // eslint-disable-next-line
   let newContent = `[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)\r\n/u/${user} has received ${flairCount} delta${flairCount === 1 ? '' : 's'} for the following comments:\r\n\r\n| Date | Submission | Delta Comment | Awarded By |\r\n| --- | :-: | --- | --- |\r\n`
   _.forEachRight(hiddenParams.deltas, col => {
     const { b, dc, t, ab, uu } = col
@@ -390,11 +389,14 @@ const verifyThenAward = async (comment) => {
         }
       )
       let text = i18n[locale].awardDelta
-      text = text.replace(/USERNAME/g, parentThing.author).replace(/DELTAS/g, flairCount).replace(/SUBREDDIT/g, subreddit)
+      text = text.replace(/USERNAME/g, parentThing.author)
+        .replace(/DELTAS/g, flairCount)
+        .replace(/SUBREDDIT/g, subreddit)
       if (query.text.length) query.text += '\n\n'
       query.text += text
       await updateFlair({ name: parentThing.author, flairCount })
     }
+    // eslint-disable-next-line
     query.text += `${i18n[locale].global}\n[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     const send = await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
     if (send.error) throw Error(send.error)
@@ -717,13 +719,14 @@ const entry = async () => {
   }
   try {
     let deltaBoardsThreeCredentials
+    /* eslint-disable import/no-unresolved */
     try {
       deltaBoardsThreeCredentials = require('./delta-boards-three-credentials')
     } catch (err) {
       console.log('Missing credentials for delta-boards-three! Using base creds as fallback!'.red)
       try {
         deltaBoardsThreeCredentials = require('./credentials')
-      } catch (err) {
+      } catch (secondErr) {
         console.log(
           'Please contact the author for credentials or create your own credentials json!'.red
         )
@@ -736,10 +739,11 @@ const entry = async () => {
         }`.red)
       }
     }
+    /* eslint-enable import/no-unresolved */
     const deltaBoardsThree = new DeltaBoardsThree({
       credentials: deltaBoardsThreeCredentials,
       version: packageJson.version,
-      flags
+      flags,
     })
     deltaBoardsThree.initialStart()
   } catch (err) {

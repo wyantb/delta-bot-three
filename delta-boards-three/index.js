@@ -31,9 +31,11 @@ class DeltaBoardsThree {
 
     // this method return a string that allows us to add metadata
     // to a listing without being seen by anybody other than DB3
+    /* eslint-disable no-irregular-whitespace */
     const stringifyObjectToBeHidden = input => (
       `[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(input, null, 2)}\nDB3PARAMSEND)`
     )
+    /* eslint-enable no-irregular-whitespace */
 
     // get the date variables ready
     const now = new Date()
@@ -69,7 +71,9 @@ class DeltaBoardsThree {
         after,
       }
       const { api } = this
-      const commentJson = await api.query(`/user/${this.credentials.username}/comments?${stringify(commentQuery)}`)
+      const commentJson = await api.query(
+        `/user/${this.credentials.username}/comments?${stringify(commentQuery)}`
+      )
       after = _.get(commentJson, 'data.after')
       if (!after) noMoreComments = true
 
@@ -219,7 +223,8 @@ class DeltaBoardsThree {
       const { api } = this
 
       // grab the newHiddenParams from the wiki page
-      const deltaBoardsWikiContent = await getWikiContent({ api, subreddit, wikiPage: 'deltaboards' })
+      const wikiPage = 'deltaboards'
+      const deltaBoardsWikiContent = await getWikiContent({ api, subreddit, wikiPage })
       const oldHiddenParams = parseHiddenParams(deltaBoardsWikiContent)
 
       // if the monthly data has changed, update the sidebar

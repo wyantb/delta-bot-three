@@ -56,12 +56,12 @@ module.exports = class RedditAPIDriver {
   }
   async query(params, noOauth, wiki, count = 0) {
     const paramsReadable = _.isString(params) ? `GET ${params}` : `${params.method} ${params.URL}`
-    const debugInfo = this.flags.isDebug ? ` for request (${paramsReadable})` : '';
+    const debugInfo = this.flags.isDebug ? ` for request (${paramsReadable})` : ''
     try {
       return await new Promise(async (res, rej) => {
         let gotResponse
         const retry = (resRetry, rejRetry) => {
-          if (count >= 5) rejRetry(Error(`Something happened! There were 5 errors! R_API${debugInfo}`))
+          if (count >= 5) rejRetry(Error(`What happened? There were 5 errors - R_API${debugInfo}`))
           else {
             console.log(`Retrying in 10 seconds! R_API${debugInfo}`)
             setTimeout(async () => {

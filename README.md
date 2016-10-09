@@ -13,6 +13,7 @@ Any contributions are much appreciated. Please keep your PRs to 1 commit and put
 1. get a Reddit API key by going to https://www.reddit.com/prefs/apps/ => create another app => https://i.imgur.com/xMUa521.png
 1. create a `credentials.json` that looks like below
 1. `npm start` and it should work
+1. Before submitting any pull request, ensure that `npm run test` passes with no errors
 
 #### credentials.json
 ````
