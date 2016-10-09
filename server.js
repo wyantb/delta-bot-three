@@ -5,11 +5,13 @@ Edited comments are not handled
 import 'colors'
 import _ from 'lodash'
 import promisify from 'promisify-node'
+/*
 import Koa from 'koa'
 import Router from 'koa-router'
+*/
 import fs from 'fs'
 import { stringify } from 'query-string'
-import bodyParser from 'koa-bodyparser'
+// import bodyParser from 'koa-bodyparser'
 import Reddit from './RedditAPIDriver'
 import DeltaBoardsThree from './delta-boards-three'
 import i18n from './i18n'
@@ -28,8 +30,10 @@ setInterval(() => {
 }, 3600000)
 
 const locale = 'en-us'
+/*
 const app = new Koa()
 const router = new Router()
+*/
 fs.writeFile = promisify(fs.writeFile)
 let state
 let lastParsedCommentIDs
@@ -483,6 +487,7 @@ const checkForDeltas = async () => {
   setTimeout(checkForDeltas, 30000)
 }
 
+/*
 router.get('/getNewComments', async (ctx, next) => {
   try {
     const comments = await getNewComments()
@@ -522,6 +527,7 @@ app
   .use(router.routes())
   .use(router.allowedMethods())
   .listen(6969)
+*/
 
 const checkMessagesforDeltas = async () => {
   last[1] = Date.now()
