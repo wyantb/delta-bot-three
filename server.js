@@ -39,7 +39,9 @@ let state
 let lastParsedCommentIDs
 let lastParsedCommentID
 try {
+  /* eslint-disable import/no-unresolved */
   state = require('./state.json')
+  /* eslint-enable import/no-unresolved */
 
   lastParsedCommentIDs = state.lastParsedCommentIDs
   lastParsedCommentID = lastParsedCommentIDs[0]
@@ -51,7 +53,9 @@ try {
 }
 let credentials
 try {
+  /* eslint-disable import/no-unresolved */
   credentials = require('./credentials')
+  /* eslint-enable import/no-unresolved */
 } catch (err) {
   console.log('Missing credentials!'.red)
   console.log('Please contact the author for credentials or create your own credentials json!'.red)
@@ -149,7 +153,7 @@ const addOrRemoveDeltaToOrFromWiki = async ({
       }
       if (content) {
         const links = _.uniq(
-            content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+\?context=2`, 'g'))
+            content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+?context=2`, 'g'))
         )
         const arrayFullnames = (
           _(links)
