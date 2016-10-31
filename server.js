@@ -718,7 +718,7 @@ const checkMessagesforDeltas = async () => {
                 [].concat(
                   comments.names, deleteCommentLinks.names
                 )
-              ).replace(/"|\[|\]/g, ''),
+              ).replace(/"|\[|]/g, ''),
             }
           ),
         }
