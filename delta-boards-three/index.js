@@ -4,6 +4,10 @@ import Api from './../RedditAPIDriver'
 import parseHiddenParams from './../parse-hidden-params'
 import getWikiContent from './../get-wiki-content'
 
+export function escapeUsername(username) {
+  return username.replace(/_/g, '\\_')
+}
+
 class DeltaBoardsThree {
   constructor({ credentials, version, flags }) {
     this.credentials = credentials // this is used to log into the Reddit API
@@ -212,8 +216,8 @@ class DeltaBoardsThree {
           return (
             `| ${rank} | ${
               rank === 1 ?
-                `**[${username}](/r/${subreddit}/wiki/user/${username})**` :
-                `[${username}](/r/${subreddit}/wiki/user/${username})`
+                `**[${escapeUsername(username)}](/r/${subreddit}/wiki/user/${username})**` :
+                `[${escapeUsername(username)}](/r/${subreddit}/wiki/user/${username})`
             } | ${deltaCount} |`
           )
         })
