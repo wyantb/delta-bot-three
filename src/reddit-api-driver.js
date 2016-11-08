@@ -8,8 +8,8 @@ import _ from 'lodash'
 fs.readFile = promisify(fs.readFile)
 
 module.exports = class RedditAPIDriver {
-  constructor(credentials, version, sessionPath, flags) {
-    this.sessionPath = sessionPath
+  constructor(credentials, version, sessionName, flags) {
+    this.sessionName = sessionName
     this.credentials = credentials
     this.flags = flags
     this.headers = {}
@@ -32,10 +32,10 @@ module.exports = class RedditAPIDriver {
         body: formurlencoded({ grant_type: 'password', username, password }),
       })
       json = await res.json()
-      fs.writeFile(`${this.sessionPath}session.json`, JSON.stringify(json, null, 2))
+      fs.writeFile(`./state/${this.sessionName}-session.json`, JSON.stringify(json, null, 2))
     } else if (type === 'FIRST_CONNECTION') {
       try {
-        json = JSON.parse(await fs.readFile(`${this.sessionPath}session.json`, 'utf-8'))
+        json = JSON.parse(await fs.readFile(`./state/${this.sessionName}-session.json`, 'utf-8'))
       } catch (err) {
         return this.connect({ type: 'GET_NEW_SESSION' })
       }

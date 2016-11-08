@@ -1,12 +1,9 @@
 import _ from 'lodash'
 import { stringify } from 'query-string'
-import Api from './../RedditAPIDriver'
-import parseHiddenParams from './../parse-hidden-params'
-import getWikiContent from './../get-wiki-content'
-
-export function escapeUsername(username) {
-  return username.replace(/_/g, '\\_')
-}
+import Api from './reddit-api-driver'
+import parseHiddenParams from './parse-hidden-params'
+import getWikiContent from './get-wiki-content'
+import { escapeUnderscore } from './utils'
 
 class DeltaBoardsThree {
   constructor({ credentials, version, flags }) {
@@ -21,7 +18,7 @@ class DeltaBoardsThree {
     const { credentials, version } = this
 
     // instantiate a new reddit API with the credentials and version
-    this.api = new Api(credentials, version, './delta-boards-three/', this.flags)
+    this.api = new Api(credentials, version, 'delta-boards-three', this.flags)
 
     // make the api a variable so we don't access it from 'this' all the time
     const { api } = this
@@ -216,8 +213,8 @@ class DeltaBoardsThree {
           return (
             `| ${rank} | ${
               rank === 1 ?
-                `**[${escapeUsername(username)}](/r/${subreddit}/wiki/user/${username})**` :
-                `[${escapeUsername(username)}](/r/${subreddit}/wiki/user/${username})`
+                `**[${escapeUnderscore(username)}](/r/${subreddit}/wiki/user/${username})**` :
+                `[${escapeUnderscore(username)}](/r/${subreddit}/wiki/user/${username})`
             } | ${deltaCount} |`
           )
         })

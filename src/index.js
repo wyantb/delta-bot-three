@@ -2,6 +2,7 @@
 Corner Cases
 Edited comments are not handled
 */
+import 'babel-polyfill'
 import 'colors'
 import _ from 'lodash'
 import promisify from 'promisify-node'
@@ -10,10 +11,9 @@ import Koa from 'koa'
 import Router from 'koa-router'
 */
 import fs from 'fs'
-import { join } from 'path'
 import { stringify } from 'query-string'
 // import bodyParser from 'koa-bodyparser'
-import Reddit from './RedditAPIDriver'
+import Reddit from './reddit-api-driver'
 import DeltaBoardsThree from './delta-boards-three'
 import i18n from './i18n'
 import parseHiddenParams from './parse-hidden-params'
@@ -42,7 +42,7 @@ let lastParsedCommentIDs
 let lastParsedCommentID
 try {
   state = JSON.parse(
-    fs.readFileSync(join(__dirname, './state.json'))
+    fs.readFileSync('./state/state.json')
   )
 
   lastParsedCommentIDs = state.lastParsedCommentIDs
@@ -56,11 +56,12 @@ try {
 let credentials
 try {
   credentials = JSON.parse(
-    fs.readFileSync(join(__dirname, './credentials.json'))
+    fs.readFileSync('./credentials/credentials.json')
   )
 } catch (err) {
   console.log('Missing credentials!'.red)
-  console.log('Please contact the author for credentials or create your own credentials json!'.red)
+  console.log('Please create your own credentials json!'.red)
+  console.log('Put it into ./credentials/credentials.json!'.red)
   console.log(`{
   "username": "Your Reddit username",
   "password": "Your Reddit password",
@@ -70,13 +71,13 @@ try {
 }`.red)
 }
 const packageJson = JSON.parse(
-  fs.readFileSync(join(__dirname, './package.json'))
+  fs.readFileSync('./package.json')
 )
 
 const subreddit = credentials.subreddit
 const botUsername = credentials.username
 const flags = { isDebug }
-const reddit = new Reddit(credentials, packageJson.version, './', flags)
+const reddit = new Reddit(credentials, packageJson.version, 'main', flags)
 
 const getNewComments = async (recursiveList) => {
   console.log('Making comments call!')
@@ -97,17 +98,17 @@ const getNewComments = async (recursiveList) => {
     for (let i = 0; i < 4; ++i) {
       lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
     }
-    await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+    await fs.writeFile('./state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
     if (lastParsedCommentIDs.length === 0) {
       lastParsedCommentID = null
-      await fs.writeFile('./state.json', '{}')
+      await fs.writeFile('./state/state.json', '{}')
 
       const stateResponse = await reddit.query(`/r/${subreddit}/comments.json`, true)
       if (stateResponse.error) throw Error(stateResponse.error)
       for (let i = 0; i < 5; ++i) {
         lastParsedCommentIDs.push(_.get(stateResponse, ['data', 'children', i, 'data', 'name']))
       }
-      await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+      await fs.writeFile('./state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
       lastParsedCommentID = lastParsedCommentIDs[0]
     }
   }
@@ -126,7 +127,7 @@ const getNewComments = async (recursiveList) => {
     for (let i = 0; i < 4; ++i) {
       lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
     }
-    await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+    await fs.writeFile('./state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
   }
   switch (true) {
     case (commentEntriesLength === 25):
@@ -740,7 +741,7 @@ const entry = async () => {
       for (let i = 0; i < 5; ++i) {
         lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
       }
-      await fs.writeFile('./state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
+      await fs.writeFile('./state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2))
       lastParsedCommentID = lastParsedCommentIDs[0]
     }
     checkForDeltas()
@@ -753,13 +754,13 @@ const entry = async () => {
     /* eslint-disable import/no-unresolved */
     try {
       deltaBoardsThreeCredentials = JSON.parse(
-        fs.readFileSync(join(__dirname, './delta-boards-three-credentials.json'))
+        fs.readFileSync('./credentials/delta-boards-three-credentials.json')
       )
     } catch (err) {
       console.log('Missing credentials for delta-boards-three! Using base creds as fallback!'.red)
       try {
         deltaBoardsThreeCredentials = JSON.parse(
-          fs.readFileSync(join(__dirname, './credentials.json'))
+          fs.readFileSync('./credentials/credentials.json')
         )
       } catch (secondErr) {
         console.log(
