@@ -1,4 +1,4 @@
-import { AllHtmlEntities as entities} from 'html-entities'
+import { AllHtmlEntities as entities } from 'html-entities'
 
 export default async ({ api, subreddit, wikiPage }) => {
   try {

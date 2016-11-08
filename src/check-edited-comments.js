@@ -5,7 +5,7 @@ import Api from './../RedditAPIDriver'
 import parseHiddenParams from './../parse-hidden-params'
 import getWikiContent from './../get-wiki-content'
 */
-import checkCommentForDelta from './utils/check-comment-for-delta'
+import { checkCommentForDelta } from './utils'
 
 class CheckEditedComments {
   constructor({ snoowrap }) {

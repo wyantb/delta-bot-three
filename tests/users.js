@@ -1,6 +1,6 @@
-import { escapeUsername } from '../delta-boards-three/index.js'
+import { escapeUnderscore } from './../src/utils.js'
 
 exports.testEscaping = (test) => {
-    test.strictEqual(escapeUsername('__UsName__'), '\\_\\_UsName\\_\\_');
-    test.done();
-};
+  test.strictEqual(escapeUnderscore('__UsName__'), '\\_\\_UsName\\_\\_')
+  test.done()
+}
