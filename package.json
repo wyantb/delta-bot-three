@@ -6,11 +6,10 @@
   "scripts": {
     "start": "supervisor -w ./lib/server.js -- ./lib/server.js",
     "start-debug": "node ./entry.js --debug",
-    "test": "concurrently \"npm run build\" \"npm run eslint\" \"nodeunit tests/main.js\"",
+    "test": "npm run eslint && jest && npm run build",
     "eslint": "eslint ./src",
     "build": "browserify --node --no-bundle-external ./src/index.js -t babelify -o ./lib/server.js",
-    "watch": "watchify --node --no-bundle-external ./src/index.js -t babelify -o ./lib/server.js",
-    "nodeunit": "nodeunit"
+    "watch": "watchify --node --no-bundle-external ./src/index.js -t babelify -o ./lib/server.js"
   },
   "repository": {
     "type": "git",
@@ -24,15 +23,15 @@
   "homepage": "https://github.com/MystK/delta-bot-three#readme",
   "devDependencies": {
     "babel-eslint": "^6.1.2",
+    "babel-jest": "^17.0.0",
     "babel-plugin-transform-runtime": "^6.15.0",
     "babel-register": "^6.18.0",
     "babelify": "^7.3.0",
     "browserify": "^13.1.0",
-    "concurrently": "^3.1.0",
     "eslint": "^3.4.0",
     "eslint-config-airbnb-base": "^5.0.3",
     "eslint-plugin-import": "^1.14.0",
-    "nodeunit": "^0.10.2",
+    "jest-cli": "^17.0.0",
     "watchify": "^3.7.0"
   },
   "dependencies": {
@@ -50,5 +49,8 @@
     "promisify-node": "^0.3.0",
     "query-string": "^3.0.0",
     "supervisor": "^0.9.1"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
