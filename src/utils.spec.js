@@ -15,6 +15,7 @@ describe('utilities', () => {
   })
   it('should correctly check for deltas', () => {
     const { checkCommentForDelta } = component
+    // eslint-disable-next-line camelcase
     const createMockCommentClass = body_html => ({ body_html })
     expect(checkCommentForDelta(createMockCommentClass(''))).toBe(false)
     expect(checkCommentForDelta(createMockCommentClass('!delta'))).toBe(true)
@@ -23,7 +24,9 @@ describe('utilities', () => {
     expect(checkCommentForDelta(createMockCommentClass('∆'))).toBe(true)
     expect(checkCommentForDelta(createMockCommentClass('&#8710;'))).toBe(true)
     expect(checkCommentForDelta(createMockCommentClass('&amp;#8710;'))).toBe(true)
-    expect(checkCommentForDelta(createMockCommentClass('blockquote&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/blockquote&gt;'))).toBe(false)
-    expect(checkCommentForDelta(createMockCommentClass('pre&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/pre&gt;'))).toBe(false)
+    expect(checkCommentForDelta(createMockCommentClass(
+        'blockquote&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/blockquote&gt;'))).toBe(false)
+    expect(checkCommentForDelta(createMockCommentClass(
+        'pre&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/pre&gt;'))).toBe(false)
   })
 })
