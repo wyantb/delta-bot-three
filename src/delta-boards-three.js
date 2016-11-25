@@ -44,8 +44,8 @@ class DeltaBoardsThree {
     const nowDayOfTheWeek = now.getDay()
     const nowMonth = now.getMonth()
     const nowYear = now.getFullYear()
-    // commented it out in case it's needed
-    // const dateOfThisSunday = new Date(nowYear, nowMonth, nowDayOfTheMonth - nowDayOfTheWeek)
+    // 864E5 is the number of milliseconds that pass in a day
+    const dateOfThisSunday = new Date(now.valueOf() - (864E5 * nowDayOfTheWeek))
     const dateOfFirstDayOfThisMonth = new Date(nowYear, nowMonth)
 
     // prep the object for the deltaBoards
@@ -117,6 +117,15 @@ class DeltaBoardsThree {
 
           // waterfall add deltas to the objects if it is a valid delta
           if (issueCount === 0) {
+            if (childDate >= dateOfThisSunday) {
+              // add to weekly boards object
+              const { weekly } = deltaBoards
+              addDelta({
+                board: weekly,
+                username: parentUserName,
+                time: createdUtc,
+              })
+            }
             // set up the waterfall delta date check
             switch (true) {
               // add to daily boards object
@@ -124,17 +133,6 @@ class DeltaBoardsThree {
                 const { daily } = deltaBoards
                 addDelta({
                   board: daily,
-                  username: parentUserName,
-                  time: createdUtc,
-                })
-              // add to weekly boards object
-              case (
-                nowMonth === childMonth &&
-                childDateDayOfTheMonth >= (nowDayOfTheMonth - nowDayOfTheWeek)
-              ): // weekly boards
-                const { weekly } = deltaBoards
-                addDelta({
-                  board: weekly,
                   username: parentUserName,
                   time: createdUtc,
                 })
