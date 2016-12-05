@@ -4,6 +4,7 @@ import fetch from 'node-fetch'
 import promisify from 'promisify-node'
 import fs from 'fs'
 import _ from 'lodash'
+import path from 'path'
 
 fs.readFile = promisify(fs.readFile)
 
@@ -32,10 +33,10 @@ module.exports = class RedditAPIDriver {
         body: formurlencoded({ grant_type: 'password', username, password }),
       })
       json = await res.json()
-      fs.writeFile(`./state/${this.sessionName}-session.json`, JSON.stringify(json, null, 2))
+      fs.writeFile(`./config/state/${this.sessionName}-session.json`, JSON.stringify(json, null, 2))
     } else if (type === 'FIRST_CONNECTION') {
       try {
-        json = JSON.parse(await fs.readFile(`./state/${this.sessionName}-session.json`, 'utf-8'))
+        json = require(path.resolve(`./config/state/${this.sessionName}-session.json`))
       } catch (err) {
         return this.connect({ type: 'GET_NEW_SESSION' })
       }
