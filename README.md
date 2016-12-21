@@ -37,7 +37,6 @@ _Please add yourself to this list if you've contributed:_
 * [roastchicken](https://github.com/roastchicken)
 * [wyantb](https://github.com/wyantb)
 * [stedop](https://github.com/stedop)
-* [sahuk](https://github.com/sahuk)
 * [beasta](https://github.com/beasta)
 
 ## Roadmap
