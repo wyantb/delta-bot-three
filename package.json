@@ -4,7 +4,7 @@
   "description": "The third rewrite of delta bot",
   "main": "dist/index.js",
   "scripts": {
-    "start": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src",
+    "start": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --inspect",
     "startProduction": "npm run build && nodemon ./dist/index.js -w ./dist",
     "start-debug": "babel-node ./src --debug",
     "test": "npm run eslint && jest && npm run build",
