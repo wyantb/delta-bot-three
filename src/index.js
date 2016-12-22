@@ -596,7 +596,7 @@ const checkMessagesforDeltas = async () => {
       }
       for (let i = 0; i < deleteCommentLinks.commentLinks.length; ++i) {
         try {
-          const commentLink = deleteCommentLinks.commentLinks[i]
+          const commentLink = deleteCommentLinks.commentLinks[i].replace(/\/\?context=[\d]+$/i, '')
           const response = await reddit.query(`${commentLink}`)
           const {
             replies,
