@@ -5,11 +5,14 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --inspect",
-    "startProduction": "npm run build && nodemon ./dist/index.js -w ./dist --exitcrash",
+    "startProduction": "npm run build && forever start --uid \"production\" -o out.log -e err.log ./dist/index.js",
     "start-debug": "babel-node ./src --debug",
     "test": "npm run eslint && jest && npm run build",
     "eslint": "eslint ./src",
-    "build": "babel src --out-dir dist --ignore spec.js"
+    "build": "babel src --out-dir dist --ignore spec.js",
+    "list": "forever list",
+    "cleanlogs": "forever cleanlogs",
+    "stop": "forever stop production"
   },
   "repository": {
     "type": "git",
@@ -36,6 +39,7 @@
   },
   "dependencies": {
     "colors": "^1.1.2",
+    "forever": "^0.15.3",
     "form-urlencoded": "^1.2.0",
     "html-entities": "^1.2.0",
     "lodash": "^4.3.0",
