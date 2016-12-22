@@ -58,7 +58,7 @@ class DeltaBoardsThree {
 
     // set when to stop getting new comments by date
     const stopBeforeThisDate = (
-      dateOfFirstDayOfThisMonth > dateOfThisMonday ? dateOfFirstDayOfThisMonth : dateOfThisMonday
+      dateOfFirstDayOfThisMonth > dateOfThisMonday ? dateOfThisMonday : dateOfFirstDayOfThisMonth
     )
 
     // set up variable for while loop
