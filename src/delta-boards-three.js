@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import { stringify } from 'query-string'
+import moment from 'moment'
 import Api from './reddit-api-driver'
 import parseHiddenParams from './parse-hidden-params'
 import getWikiContent from './get-wiki-content'
@@ -41,11 +42,10 @@ class DeltaBoardsThree {
     // get the date variables ready
     const now = new Date()
     const nowDayOfTheMonth = now.getDate()
-    const nowDayOfTheWeek = now.getDay()
     const nowMonth = now.getMonth()
     const nowYear = now.getFullYear()
-    // commented it out in case it's needed
-    // const dateOfThisSunday = new Date(nowYear, nowMonth, nowDayOfTheMonth - nowDayOfTheWeek)
+    const dateOfThisMonday = new Date(moment().isoWeekday(1).format())
+    const dateOfThisSunday = new Date(moment().isoWeekday(7).format())
     const dateOfFirstDayOfThisMonth = new Date(nowYear, nowMonth)
 
     // prep the object for the deltaBoards
@@ -57,7 +57,9 @@ class DeltaBoardsThree {
     }
 
     // set when to stop getting new comments by date
-    const stopBeforeThisDate = dateOfFirstDayOfThisMonth
+    const stopBeforeThisDate = (
+      dateOfFirstDayOfThisMonth > dateOfThisMonday ? dateOfFirstDayOfThisMonth : dateOfThisMonday
+    )
 
     // set up variable for while loop
     let oldestDateParsed = now
@@ -129,8 +131,8 @@ class DeltaBoardsThree {
                 })
               // add to weekly boards object
               case (
-                nowMonth === childMonth &&
-                childDateDayOfTheMonth >= (nowDayOfTheMonth - nowDayOfTheWeek)
+                dateOfThisMonday <= childDate &&
+                dateOfThisSunday >= childDate
               ): // weekly boards
                 const { weekly } = deltaBoards
                 addDelta({
