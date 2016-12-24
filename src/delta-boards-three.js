@@ -271,7 +271,7 @@ ${mapDataToTable(newHiddenParams.monthly)}
         const newSideBarText = sideBar
           .replace(textToReplace, newTableToPutIn)
           .replace(/&gt;/g, '>')
-          .replace(/amp;#/g, '#')
+          .replace(/&amp;/g, '&')
           .replace(/amp;\\/g, '\\')
         const currentAboutData = _.get(getAboutResponse, 'data')
 
