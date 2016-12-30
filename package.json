@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --inspect",
     "startProduction": "npm run build && forever start --uid \"production\" -o out.log -e err.log ./dist/index.js",
-    "start-debug": "babel-node ./src --debug",
+    "start-debug": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --debug --bypass-op-check",
     "test": "npm run eslint && jest && npm run build",
     "eslint": "eslint ./src",
     "build": "babel src --out-dir dist --ignore spec.js",
