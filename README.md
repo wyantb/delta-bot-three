@@ -17,8 +17,8 @@ The third rewrite of delta bot, created for reddit.com/r/changemyview. This bot 
 1. Create a subreddit. after creation, ensure that "mod editing" for the subreddit's wiki is enabled, and make you bot account a moderator for the subreddit
 1. Get a Reddit API key by going to https://www.reddit.com/prefs/apps/ => create another app => https://i.imgur.com/xMUa521.png
 1. Create a `credentials.json` that looks like below in `./config/credentials` folder.
-1. `npm install`
-1. `npm start` and it should work
+1. `npm install -g yarn` && `yarn`
+1. Run `yarn run start-debug` or `yarn start` and it should work
 
 #### credentials.json
 ````
