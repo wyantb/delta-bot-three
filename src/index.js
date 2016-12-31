@@ -17,11 +17,12 @@ import path from 'path'
 import Reddit from './reddit-api-driver'
 import DeltaBoardsThree from './delta-boards-three'
 import parseHiddenParams from './parse-hidden-params'
+import stringifyObjectToBeHidden from './stringify-hidden-params'
 import getWikiContent from './get-wiki-content'
 
 const i18n = require(path.resolve('i18n'))
 
-const isDebug = _.some(process.argv, arg => arg === '--debug')
+const isDebug = _.some(process.argv, arg => (arg === '--debug' || arg === '--db3-debug'))
 const bypassOPCheck = _.some(process.argv, arg => arg === '--bypass-op-check')
 if (isDebug) {
   console.log('server.js called!  running in debug mode')
@@ -43,19 +44,24 @@ mkdirp.sync('./config/state')
 
 fs.writeFile = promisify(fs.writeFile)
 let credentials
+
+function logCredentialsFile() {
+  console.log(`{
+  "username": "Your Reddit username",
+  "password": "Your Reddit password",
+  "clientID": "Your application ID",
+  "clientSecret": "Your application secret",
+  "subreddit": "Your subreddit to moderate",
+  "deltaLogSubreddit": "Your subreddit to post delta logs to"
+}`.red)
+}
 try {
   credentials = require(path.resolve('./config/credentials/credentials.json'))
 } catch (err) {
   console.log('Missing credentials!'.red)
   console.log('Please create your own credentials json!'.red)
   console.log('Put it into ./config/credentials/credentials.json!'.red)
-  console.log(`{
-  "username": "Your Reddit username",
-  "password": "Your Reddit password",
-  "clientID": "Your application ID",
-  "clientSecret": "Your application secret",
-  "subreddit": "Your subreddit to moderate"
-}`.red)
+  logCredentialsFile()
   process.exit()
 }
 
@@ -327,6 +333,89 @@ const sendIntroductoryMessage = async ({ username, flairCount }) => {
   return true
 }
 
+const makeComment = async (commentArgs) => {
+  const send = await reddit.query({
+    URL: `/api/comment?${stringify(commentArgs.content)}`,
+    method: 'POST',
+  })
+  if (send.error) throw Error(send.error)
+  const flattened = _.flattenDeep(send.jquery)
+  const commentFullName = _.get(_.find(flattened, 'data.name'), 'data.name')
+  const postArgs = { id: commentFullName, how: 'yes', sticky: !!commentArgs.sticky }
+  const distinguishResp = await reddit.query(
+    {
+      URL: `/api/distinguish?${stringify(postArgs)}`,
+      method: 'POST',
+    }
+  )
+  if (distinguishResp.error) throw Error(distinguishResp.error)
+  return true
+}
+
+/* When DB3 starts up, it doesn't have { PostId, LogId, StickyCommentId } mappings, so load them */
+const loadDeltaLogFromWiki = async () => {
+  const rawInternalWikiText = await reddit.query({
+    URL: `/r/${credentials.deltaLogSubreddit}/wiki/internal`,
+    method: 'GET',
+  })
+  if (rawInternalWikiText.error) throw Error(rawInternalWikiText)
+  const wikiTextMd = _.get(rawInternalWikiText, 'data.content_md')
+  if (isDebug) console.log('WIKI internal GET:', wikiTextMd)
+  return parseHiddenParams(wikiTextMd)
+}
+// used for storing both sticky comment info in original post, which links to the DeltaLog mirror
+let deltaLogKnownPosts = null
+const findOrMkeStickedComment = async (/* linkID, comment, deltaLogPost */) => {}
+const deltaLogSubjectTemplate = _.template(i18n[locale].deltaLogTitle)
+const deltaLogContentTemplate = _.template(i18n[locale].deltaLogContent)
+const findOrMakeDeltaLogPost = async (linkID, comment) => {
+  if (deltaLogKnownPosts == null) {
+    deltaLogKnownPosts = await loadDeltaLogFromWiki()
+  }
+  // TODO if a post exists, update the DeltaLog post & return early
+
+  const deltaLogSubject = deltaLogSubjectTemplate({ title: comment.link_title })
+  const deltaLogContent = deltaLogContentTemplate({ linkToPost: comment.link_url })
+  const postParams = {
+    api_type: 'json',
+    kind: 'self',
+    sr: credentials.deltaLogSubreddit,
+    text: deltaLogContent,
+    title: deltaLogSubject,
+  }
+  const newPost = await reddit.query({
+    URL: `/api/submit?${stringify(postParams)}`,
+    method: 'POST',
+  })
+  if (newPost.error) throw Error(newPost.error)
+  _.forEach(newPost.jquery, function (thing) {
+    console.log(thing && thing[3]);
+  });
+  console.log(JSON.stringify(newPost.jquery, null, '2'))
+  const postDetails = _.find(_.flattenDeep(newPost.jquery), 'data')
+  if (isDebug) console.log('DeltaLog post details:', postDetails)
+  deltaLogKnownPosts.push({
+    originalPostID: linkID,
+    originalPostURL: comment.link_url,
+  })
+  // TODO 'update' the DeltaLog post with the parent comment here
+  return postDetails
+}
+const updateDeltaLogWikiLinks = async (/*linkID, comment, deltaLogPost, stickiedComment*/) => {
+  const postParams = {
+    content: stringifyObjectToBeHidden(deltaLogKnownPosts),
+    page: 'internal',
+    reason: 'DeltaBot update',
+  }
+  const update = await reddit.query({
+    URL: `/r/${credentials.deltaLogSubreddit}/api/wiki/edit?${stringify(postParams)}`,
+    method: 'POST',
+  })
+  if (update.error) throw Error(update.error)
+  if (isDebug) console.log('Updated internal wiki page:', update)
+  return update
+}
+
 const verifyThenAward = async (comment) => {
   const {
     created_utc: createdUTC,
@@ -339,7 +428,7 @@ const verifyThenAward = async (comment) => {
     parent_id: parentID,
   } = comment
   try {
-    console.log(author, body, linkID, parentID)
+    if (isDebug) console.log(author, body, linkID, parentID)
     const hiddenParams = {
       comment: i18n[locale].hiddenParamsComment,
       issues: {},
@@ -435,17 +524,12 @@ const verifyThenAward = async (comment) => {
     }
     // eslint-disable-next-line
     query.text += `${i18n[locale].global}\n[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
-    const send = await reddit.query({ URL: `/api/comment?${stringify(query)}`, method: 'POST' })
-    if (send.error) throw Error(send.error)
-    const flattened = _.flattenDeep(send.jquery)
-    const commentFullName = _.get(_.find(flattened, 'data.name'), 'data.name')
-    const distinguishResp = await reddit.query(
-      {
-        URL: `/api/distinguish?${stringify({ id: commentFullName, how: 'yes' })}`,
-        method: 'POST',
-      }
-    )
-    if (distinguishResp.error) throw Error(distinguishResp.error)
+    await makeComment({ content: query, sticky: false })
+    if (issueCount === 0) {
+      const deltaLogPost = await findOrMakeDeltaLogPost(linkID, comment)
+      const stickiedComment = await findOrMkeStickedComment(linkID, comment, deltaLogPost)
+      await updateDeltaLogWikiLinks(linkID, comment, deltaLogPost, stickiedComment)
+    }
     return true
   } catch (err) {
     console.log(err)
@@ -773,13 +857,7 @@ const entry = async () => {
         console.log(
           'Please contact the author for credentials or create your own credentials json!'.red
         )
-        console.log(`{
-          "username": "Your Reddit username",
-          "password": "Your Reddit password",
-          "clientID": "Your application ID",
-          "clientSecret": "Your application secret",
-          "subreddit": "Your subreddit to moderate"
-        }`.red)
+        logCredentialsFile()
       }
     }
     /* eslint-enable import/no-unresolved */
