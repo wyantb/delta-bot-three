@@ -119,6 +119,20 @@ class DeltaBoardsThree {
 
           // waterfall add deltas to the objects if it is a valid delta
           if (issueCount === 0) {
+            // weekly deltaboard is unique, remove it from the waterfall
+            // because it could be before or after the monthly deltaboards.
+            // add to weekly boards object
+            if (
+              dateOfThisMonday <= childDate &&
+              dateOfThisSunday >= childDate
+            ) { // weekly boards
+              const { weekly } = deltaBoards
+              addDelta({
+                board: weekly,
+                username: parentUserName,
+                time: createdUtc,
+              })
+            }
             // set up the waterfall delta date check
             switch (true) {
               // add to daily boards object
@@ -126,17 +140,6 @@ class DeltaBoardsThree {
                 const { daily } = deltaBoards
                 addDelta({
                   board: daily,
-                  username: parentUserName,
-                  time: createdUtc,
-                })
-              // add to weekly boards object
-              case (
-                dateOfThisMonday <= childDate &&
-                dateOfThisSunday >= childDate
-              ): // weekly boards
-                const { weekly } = deltaBoards
-                addDelta({
-                  board: weekly,
                   username: parentUserName,
                   time: createdUtc,
                 })
