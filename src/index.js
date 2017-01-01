@@ -598,12 +598,14 @@ const checkForDeltas = async () => {
         name,
         author_flair_text,
         link_url,
+        link_author,
         created_utc,
         created,
       } = entry.data
       comments[index] = {
         link_title,
         link_id,
+        link_author,
         author,
         body,
         body_html,
