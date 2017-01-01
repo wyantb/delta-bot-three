@@ -366,9 +366,13 @@ const loadDeltaLogFromWiki = async () => {
 // used for storing both sticky comment info in original post, which links to the DeltaLog mirror
 let deltaLogKnownPosts = null
 
-const wasDeltaMadeByAuthor = (comment) => {
-  if (isDebug) console.log('for checking if delta was made by author, the comment:', comment)
-  return comment.link_author === comment.author
+const wasDeltaMadeByAuthor = (comment) => comment.link_author === comment.author
+const TRUNCATE_AWARD_LENGTH = 100
+const truncateAwardedText = (text) => {
+  if (text.length > TRUNCATE_AWARD_LENGTH) {
+    return `${text.substring(0, TRUNCATE_AWARD_LENGTH)}...`
+  }
+  return text
 }
 
 const findOrMkeStickedComment = async (/* linkID, comment, deltaLogPost */) => {}
@@ -386,12 +390,21 @@ const loadPostText = async (deltaLogPostID) => {
 }
 
 /* Updates a DeltaLog post, appending to the appropriate section (op/not op) */
+const deltaLogOPEntryTemplate = _.template(i18n[locale].deltaLogOPEntry)
+const deltaLogOtherEntryTemplate = _.template(i18n[locale].deltaLogOtherEntry)
 const addDeltaToLog = async (linkID, comment, parentThing, existingPost, knownPostText) => {
-  const sectionToAppend = wasDeltaMadeByAuthor(comment) ?
-    '[](HTTP://DB3-FROMOP' : '[](HTTP://DB3-FROMOTHER'
+  const wasByAuthor = wasDeltaMadeByAuthor(comment)
+  const sectionToAppend = wasByAuthor ? '[](HTTP://DB3-FROMOP' : '[](HTTP://DB3-FROMOTHER'
+  const appliedTemplate = wasByAuthor ? deltaLogOPEntryTemplate : deltaLogOtherEntryTemplate
   const postText = knownPostText != null ?
     knownPostText : (await loadPostText(existingPost.deltaLogPostID))
-  const commentText = parentThing.body
+  const commentTemplateArgs = {
+    awardingUsername: comment.author,
+    awardedUsername: parentThing.author,
+    awardedText: truncateAwardedText(parentThing.body),
+    awardedLink: comment.link_url + parentThing.id,
+  }
+  const commentText = appliedTemplate(commentTemplateArgs)
   const updatedText = postText.replace(sectionToAppend, `${commentText}\n\n${sectionToAppend}`)
   const updateParams = {
     text: updatedText,
@@ -420,7 +433,10 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   }
   // otherwise, create it & add the delta details to appropriate section
   const deltaLogSubject = deltaLogSubjectTemplate({ title: comment.link_title })
-  const deltaLogContent = deltaLogContentTemplate({ linkToPost: comment.link_url })
+  const deltaLogContent = deltaLogContentTemplate({
+    opUsername: comment.link_author,
+    linkToPost: comment.link_url,
+  })
   const postParams = {
     api_type: 'json',
     kind: 'self',
@@ -434,7 +450,6 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   })
   if (newPost.error) throw Error(newPost.error)
   const postDetails = newPost.json
-  if (isDebug) console.log('DeltaLog post details:', postDetails)
   const wikiPostObject = {
     originalPostID: linkID,
     originalPostURL: comment.link_url,
@@ -457,7 +472,6 @@ const updateDeltaLogWikiLinks = async (/*linkID, comment, deltaLogPost, stickied
     method: 'POST',
   })
   if (update.error) throw Error(update.error)
-  if (isDebug) console.log('Updated internal wiki page:', update)
   return update
 }
 
