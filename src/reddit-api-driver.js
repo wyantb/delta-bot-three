@@ -121,8 +121,7 @@ module.exports = class RedditAPIDriver {
         } else if (statusCode === 401 || statusCode === 403) {
           console.log('75 R_API (status was 401 or 403)')
           if (this.flags.isDebug) {
-            response.body = (await response.text()).substr(0, 1000)
-            console.log(_.pick(response, 'url', 'status', 'statusText', 'body'))
+            console.log(_.pick(response, 'url', 'status', 'statusText'))
           }
           await this.connect({ type: 'GET_NEW_SESSION' })
           retry(res, rej)
