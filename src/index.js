@@ -374,6 +374,7 @@ const truncateAwardedText = (text) => {
   }
   return text
 }
+const formatAwardedText = (text) => truncateAwardedText(text).replace(/\n/g, '')
 
 const findOrMkeStickedComment = async (/* linkID, comment, deltaLogPost */) => {}
 
@@ -401,7 +402,7 @@ const addDeltaToLog = async (linkID, comment, parentThing, existingPost, knownPo
   const commentTemplateArgs = {
     awardingUsername: comment.author,
     awardedUsername: parentThing.author,
-    awardedText: truncateAwardedText(parentThing.body),
+    awardedText: formatAwardedText(parentThing.body),
     awardedLink: comment.link_url + parentThing.id,
   }
   const commentText = appliedTemplate(commentTemplateArgs)
