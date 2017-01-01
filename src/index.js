@@ -24,6 +24,7 @@ const i18n = require(path.resolve('i18n'))
 
 const isDebug = _.some(process.argv, arg => (arg === '--debug' || arg === '--db3-debug'))
 const bypassOPCheck = _.some(process.argv, arg => arg === '--bypass-op-check')
+const deltaLogEnabled = _.some(process.argv, arg => arg === '--enable-delta-log')
 if (isDebug) {
   console.log('server.js called!  running in debug mode')
 }
@@ -83,7 +84,7 @@ const packageJson = require(path.resolve('./package.json'))
 
 const subreddit = credentials.subreddit
 const botUsername = credentials.username
-const flags = { isDebug }
+const flags = { isDebug, deltaLogEnabled }
 const reddit = new Reddit(credentials, packageJson.version, 'main', flags)
 
 const getNewComments = async (recursiveList) => {
@@ -585,7 +586,7 @@ const verifyThenAward = async (comment) => {
     // eslint-disable-next-line
     query.text += `${i18n[locale].global}\n[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     await makeComment({ content: query, sticky: false })
-    if (issueCount === 0) {
+    if (issueCount === 0 && deltaLogEnabled) {
       const deltaLogPost = await findOrMakeDeltaLogPost(linkID, comment, parentThing)
       const stickiedComment = await findOrMkeStickedComment(linkID, comment, deltaLogPost)
       await updateDeltaLogWikiLinks(linkID, comment, deltaLogPost, stickiedComment)
