@@ -365,15 +365,60 @@ const loadDeltaLogFromWiki = async () => {
 }
 // used for storing both sticky comment info in original post, which links to the DeltaLog mirror
 let deltaLogKnownPosts = null
+
+const wasDeltaMadeByAuthor = (comment) => {
+  if (isDebug) console.log('for checking if delta was made by author, the comment:', comment)
+  return comment.link_author === comment.author
+}
+
 const findOrMkeStickedComment = async (/* linkID, comment, deltaLogPost */) => {}
+
+/* Gets the text of a DeltaLog post, for use when updating the log */
+const loadPostText = async (deltaLogPostID) => {
+  const postDetails = await reddit.query({
+    URL: `/r/${credentials.deltaLogSubreddit}/comments/${deltaLogPostID}/.json`,
+    method: 'GET',
+  })
+  if (postDetails.error) throw Error(postDetails.error)
+  const postJSON = (postDetails && postDetails.json) || postDetails
+  const postData = postJSON[0].data.children[0].data
+  return postData.selftext
+}
+
+/* Updates a DeltaLog post, appending to the appropriate section (op/not op) */
+const addDeltaToLog = async (linkID, comment, parentThing, existingPost, knownPostText) => {
+  const sectionToAppend = wasDeltaMadeByAuthor(comment) ?
+    '[](HTTP://DB3-FROMOP' : '[](HTTP://DB3-FROMOTHER'
+  const postText = knownPostText != null ?
+    knownPostText : (await loadPostText(existingPost.deltaLogPostID))
+  const commentText = parentThing.body
+  const updatedText = postText.replace(sectionToAppend, `${commentText}\n\n${sectionToAppend}`)
+  const updateParams = {
+    text: updatedText,
+    thing_id: `t3_${existingPost.deltaLogPostID}`,
+  }
+  const updateResponse = await reddit.query({
+    URL: `/api/editusertext?${stringify(updateParams)}`,
+    method: 'POST',
+  })
+  if (updateResponse.error) throw Error(updateResponse.error)
+  return true
+}
+
+/* Makes delta log posts & updates OP/Other Users sections */
 const deltaLogSubjectTemplate = _.template(i18n[locale].deltaLogTitle)
 const deltaLogContentTemplate = _.template(i18n[locale].deltaLogContent)
-const findOrMakeDeltaLogPost = async (linkID, comment) => {
+const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   if (deltaLogKnownPosts == null) {
     deltaLogKnownPosts = await loadDeltaLogFromWiki()
   }
-  // TODO if a post exists, update the DeltaLog post & return early
-
+  const possiblyExistingPost = _.find(deltaLogKnownPosts, { originalPostID: linkID })
+  // if the log post already exists, all we'll need to do is update
+  if (possiblyExistingPost != null) {
+    await addDeltaToLog(linkID, comment, parentThing, possiblyExistingPost)
+    return possiblyExistingPost
+  }
+  // otherwise, create it & add the delta details to appropriate section
   const deltaLogSubject = deltaLogSubjectTemplate({ title: comment.link_title })
   const deltaLogContent = deltaLogContentTemplate({ linkToPost: comment.link_url })
   const postParams = {
@@ -388,19 +433,19 @@ const findOrMakeDeltaLogPost = async (linkID, comment) => {
     method: 'POST',
   })
   if (newPost.error) throw Error(newPost.error)
-  _.forEach(newPost.jquery, function (thing) {
-    console.log(thing && thing[3]);
-  });
-  console.log(JSON.stringify(newPost.jquery, null, '2'))
-  const postDetails = _.find(_.flattenDeep(newPost.jquery), 'data')
+  const postDetails = newPost.json
   if (isDebug) console.log('DeltaLog post details:', postDetails)
-  deltaLogKnownPosts.push({
+  const wikiPostObject = {
     originalPostID: linkID,
     originalPostURL: comment.link_url,
-  })
-  // TODO 'update' the DeltaLog post with the parent comment here
-  return postDetails
+    deltaLogPostID: postDetails.data.id,
+  }
+  deltaLogKnownPosts.push(wikiPostObject)
+  await addDeltaToLog(linkID, comment, parentThing, wikiPostObject, deltaLogContent)
+  return wikiPostObject
 }
+
+/* Updates the delta log hidden contents with known CMV posts -> DeltaLog posts & sticky comments */
 const updateDeltaLogWikiLinks = async (/*linkID, comment, deltaLogPost, stickiedComment*/) => {
   const postParams = {
     content: stringifyObjectToBeHidden(deltaLogKnownPosts),
@@ -526,7 +571,7 @@ const verifyThenAward = async (comment) => {
     query.text += `${i18n[locale].global}\n[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(hiddenParams, null, 2)}\nDB3PARAMSEND)`
     await makeComment({ content: query, sticky: false })
     if (issueCount === 0) {
-      const deltaLogPost = await findOrMakeDeltaLogPost(linkID, comment)
+      const deltaLogPost = await findOrMakeDeltaLogPost(linkID, comment, parentThing)
       const stickiedComment = await findOrMkeStickedComment(linkID, comment, deltaLogPost)
       await updateDeltaLogWikiLinks(linkID, comment, deltaLogPost, stickiedComment)
     }
