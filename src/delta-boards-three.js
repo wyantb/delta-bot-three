@@ -279,7 +279,7 @@ ${mapDataToTable(newHiddenParams.monthly)}
         const currentAboutData = _.get(getAboutResponse, 'data')
 
         // start params
-        const updateSideBarQuery = _.assign({}, currentAboutData, {
+        const updateSideBarQuery = _.assign({ allow_top: false }, currentAboutData, {
           description: newSideBarText,
           sr: currentAboutData.subreddit_id,
           type: currentAboutData.subreddit_type,
