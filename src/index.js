@@ -334,6 +334,15 @@ const sendIntroductoryMessage = async ({ username, flairCount }) => {
   return true
 }
 
+const distinguishThing = async (args) => {
+  const distinguishResp = await reddit.query({
+    URL: `/api/distinguish?${stringify(args)}`,
+    method: 'POST',
+  })
+  if (distinguishResp.error) throw Error(distinguishResp.error)
+  return true
+}
+
 const makeComment = async (commentArgs) => {
   const send = await reddit.query({
     URL: `/api/comment?${stringify(commentArgs.content)}`,
@@ -342,14 +351,7 @@ const makeComment = async (commentArgs) => {
   if (send.error) throw Error(send.error)
   const flattened = _.flattenDeep(send.jquery)
   const commentFullName = _.get(_.find(flattened, 'data.name'), 'data.name')
-  const postArgs = { id: commentFullName, how: 'yes', sticky: !!commentArgs.sticky }
-  const distinguishResp = await reddit.query(
-    {
-      URL: `/api/distinguish?${stringify(postArgs)}`,
-      method: 'POST',
-    }
-  )
-  if (distinguishResp.error) throw Error(distinguishResp.error)
+  await distinguishThing({ id: commentFullName, how: 'yes', sticky: !!commentArgs.sticky })
   return true
 }
 
@@ -368,7 +370,7 @@ const loadDeltaLogFromWiki = async () => {
 let deltaLogKnownPosts = null
 
 const wasDeltaMadeByAuthor = (comment) => comment.link_author === comment.author
-const TRUNCATE_AWARD_LENGTH = 100
+const TRUNCATE_AWARD_LENGTH = 200
 const truncateAwardedText = (text) => {
   if (text.length > TRUNCATE_AWARD_LENGTH) {
     return `${text.substring(0, TRUNCATE_AWARD_LENGTH)}...`
@@ -459,6 +461,7 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   }
   deltaLogKnownPosts.push(wikiPostObject)
   await addDeltaToLog(linkID, comment, parentThing, wikiPostObject, deltaLogContent)
+  await distinguishThing({ id: `t3_${postDetails.data.id}`, how: 'yes', sticky: false })
   return wikiPostObject
 }
 
