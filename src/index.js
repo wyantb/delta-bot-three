@@ -388,7 +388,7 @@ const formatAwardedText = (text) => {
 
 /* Invoked after the DeltaLog post is made, so `deltaLogKnownPosts` will be populated */
 const deltaLogStickyTemplate = _.template(i18n[locale].deltaLogSticky)
-const findOrMkeStickedComment = async (linkID, comment, deltaLogPost) => {
+const findOrMakeStickiedComment = async (linkID, comment, deltaLogPost) => {
   if (deltaLogPost.stickiedCommentID) {
     return true
   }
@@ -620,7 +620,7 @@ const verifyThenAward = async (comment) => {
     await makeComment({ content: query, sticky: false })
     if (issueCount === 0 && deltaLogEnabled) {
       const deltaLogPost = await findOrMakeDeltaLogPost(linkID, comment, parentThing)
-      const stickiedComment = await findOrMkeStickedComment(linkID, comment, deltaLogPost)
+      const stickiedComment = await findOrMakeStickiedComment(linkID, comment, deltaLogPost)
       await updateDeltaLogWikiLinks(linkID, comment, deltaLogPost, stickiedComment)
     }
     return true
