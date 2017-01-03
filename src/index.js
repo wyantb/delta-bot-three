@@ -352,7 +352,7 @@ const makeComment = async (commentArgs) => {
   const flattened = _.flattenDeep(send.jquery)
   const commentFullName = _.get(_.find(flattened, 'data.name'), 'data.name')
   await distinguishThing({ id: commentFullName, how: 'yes', sticky: !!commentArgs.sticky })
-  return true
+  return commentFullName
 }
 
 /* When DB3 starts up, it doesn't have { PostId, LogId, StickyCommentId } mappings, so load them */
@@ -386,7 +386,29 @@ const formatAwardedText = (text) => {
   return truncateAwardedText(textWithoutLinks)
 }
 
-const findOrMkeStickedComment = async (/* linkID, comment, deltaLogPost */) => {}
+/* Invoked after the DeltaLog post is made, so `deltaLogKnownPosts` will be populated */
+const deltaLogStickyTemplate = _.template(i18n[locale].deltaLogSticky)
+const findOrMkeStickedComment = async (linkID, comment, deltaLogPost) => {
+  if (deltaLogPost.stickiedCommentID) {
+    return true
+  }
+  if (!wasDeltaMadeByAuthor(comment)) {
+    return true
+  }
+  const stickiedCommentID = await makeComment({
+    sticky: true,
+    content: {
+      thing_id: linkID,
+      text: deltaLogStickyTemplate({
+        username: comment.author,
+        linkToPost: `/r/${credentials.deltaLogSubreddit}/comments/${deltaLogPost.deltaLogPostID}`,
+        deltaLogSubreddit: credentials.deltaLogSubreddit,
+      }),
+    },
+  })
+  deltaLogPost.stickiedCommentID = stickiedCommentID
+  return true
+}
 
 /* Gets the text of a DeltaLog post, for use when updating the log */
 const loadPostText = async (deltaLogPostID) => {
