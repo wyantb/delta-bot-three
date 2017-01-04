@@ -4,8 +4,8 @@
   "description": "The third rewrite of delta bot",
   "main": "dist/index.js",
   "scripts": {
-    "start": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --inspect",
-    "startProduction": "npm run build && forever start --uid \"production\" -o out.log -e err.log ./dist/index.js",
+    "start": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --inspect --enable-delta-log",
+    "startProduction": "npm run build && forever start --uid \"production\" -o out.log -e err.log ./dist/index.js --enable-delta-log",
     "start-debug": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --db3-debug --bypass-op-check --enable-delta-log",
     "start-debug-inspector": "npm run test && npm run build && node-debug ./dist/index.js --db3-debug --bypass-op-check --enable-delta-log",
     "test": "npm run eslint && jest && npm run build",
