@@ -22,7 +22,7 @@ import getWikiContent from './get-wiki-content'
 
 const i18n = require(path.resolve('i18n'))
 
-const isDebug = _.some(process.argv, arg => (arg === '--debug' || arg === '--db3-debug'))
+const isDebug = _.some(process.argv, arg => arg === '--db3-debug')
 const bypassOPCheck = _.some(process.argv, arg => arg === '--bypass-op-check')
 const deltaLogEnabled = _.some(process.argv, arg => arg === '--enable-delta-log')
 if (isDebug) {
