@@ -381,7 +381,7 @@ const formatAwardedText = (text) => {
   /* eslint-disable no-useless-escape */
   const textWithoutLinks = text
     .replace(/\n+/g, ' ') // one or more newlines -> just one space
-    .replace(/\[(.+)\]\(.+\)/, '$1') // links like `[foo](URL)` -> just `foo` in log line
+    .replace(/\[(.+)\]\(.+\)/g, '$1') // links like `[foo](URL)` -> just `foo` in log line
   /* eslint-enable no-useless-escape */
   return truncateAwardedText(textWithoutLinks)
 }
