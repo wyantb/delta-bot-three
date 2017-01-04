@@ -422,25 +422,64 @@ const loadPostText = async (deltaLogPostID) => {
   return postData.selftext
 }
 
-/* Updates a DeltaLog post, appending to the appropriate section (op/not op) */
+const mapDeltaLogCommentEntry = (comment, parentThing) => ({
+  awardingUsername: comment.author,
+  awardedUsername: parentThing.author,
+  awardedText: formatAwardedText(parentThing.body),
+  awardedLink: comment.link_url + parentThing.id,
+})
+
+/* Replaces the "From OP" section contents with appropriate comment links */
 const deltaLogOPEntryTemplate = _.template(i18n[locale].deltaLogOPEntry)
-const deltaLogOtherEntryTemplate = _.template(i18n[locale].deltaLogOtherEntry)
-const addDeltaToLog = async (linkID, comment, parentThing, existingPost, knownPostText) => {
-  const wasByAuthor = wasDeltaMadeByAuthor(comment)
-  const sectionToAppend = wasByAuthor ? '[](HTTP://DB3-FROMOP' : '[](HTTP://DB3-FROMOTHER'
-  const appliedTemplate = wasByAuthor ? deltaLogOPEntryTemplate : deltaLogOtherEntryTemplate
-  const postText = knownPostText != null ?
-    knownPostText : (await loadPostText(existingPost.deltaLogPostID))
-  const commentTemplateArgs = {
-    awardingUsername: comment.author,
-    awardedUsername: parentThing.author,
-    awardedText: formatAwardedText(parentThing.body),
-    awardedLink: comment.link_url + parentThing.id,
+const logOpComments = (comments, postBase) => {
+  const REPLACE_SECTION = '[](HTTP://DB3-FROMOP)'
+  if (_.isEmpty(comments)) {
+    return postBase.replace(REPLACE_SECTION, i18n[locale].deltaLogNoneYet)
   }
-  const commentText = appliedTemplate(commentTemplateArgs)
-  const updatedText = postText.replace(sectionToAppend, `${commentText}\n\n${sectionToAppend}`)
+  return _.reduce(comments, (postSoFar, comment) => {
+    const commentString = deltaLogOPEntryTemplate(comment)
+    return postSoFar.replace(REPLACE_SECTION, `${commentString}\n${REPLACE_SECTION}`)
+  }, postBase)
+}
+
+/* Replaces the "From Other Users" section contents with appropriate comment links */
+const deltaLogOtherEntryTemplate = _.template(i18n[locale].deltaLogOtherEntry)
+const logOtherComments = (comments, postBase) => {
+  const REPLACE_SECTION = '[](HTTP://DB3-FROMOTHER)'
+  if (_.isEmpty(comments)) {
+    return postBase.replace(REPLACE_SECTION, i18n[locale].deltaLogNoneYet)
+  }
+  return _.reduce(comments, (postSoFar, comment) => {
+    const commentString = deltaLogOtherEntryTemplate(comment)
+    return postSoFar.replace(REPLACE_SECTION, `${commentString}\n${REPLACE_SECTION}`)
+  }, postBase)
+}
+
+/* Given a JSON object like the hidden param on deltalog pages, produces the output page */
+const deltaLogContentTemplate = _.template(i18n[locale].deltaLogContent)
+const formatDeltaLogContent = (deltaLogCreationParams) => {
+  const { opUsername, linkToPost, comments } = deltaLogCreationParams
+  const deltaLogBaseContent = deltaLogContentTemplate({
+    opUsername,
+    linkToPost,
+  })
+  const commentsByGroup = _.partition(comments, { author: opUsername })
+  const commentsByOP = commentsByGroup[0]
+  const commentsByOther = commentsByGroup[1]
+  const deltaLogContent =
+    logOpComments(commentsByOP,
+      logOtherComments(commentsByOther, deltaLogBaseContent))
+  return `${deltaLogContent}\n${stringifyObjectToBeHidden(deltaLogCreationParams)}`
+}
+
+/* Updates a DeltaLog post, appending to the appropriate section (op/not op) */
+const addDeltaToLog = async (linkID, comment, parentThing, existingPost) => {
+  const postText = await loadPostText(existingPost.deltaLogPostID)
+  const deltaLogCreationParams = parseHiddenParams(postText)
+  deltaLogCreationParams.comments.push(mapDeltaLogCommentEntry(comment, parentThing))
+  const newDeltaLogContent = formatDeltaLogContent(deltaLogCreationParams)
   const updateParams = {
-    text: updatedText,
+    text: newDeltaLogContent,
     thing_id: `t3_${existingPost.deltaLogPostID}`,
   }
   const updateResponse = await reddit.query({
@@ -453,7 +492,6 @@ const addDeltaToLog = async (linkID, comment, parentThing, existingPost, knownPo
 
 /* Makes delta log posts & updates OP/Other Users sections */
 const deltaLogSubjectTemplate = _.template(i18n[locale].deltaLogTitle)
-const deltaLogContentTemplate = _.template(i18n[locale].deltaLogContent)
 const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   if (deltaLogKnownPosts == null) {
     deltaLogKnownPosts = await loadDeltaLogFromWiki()
@@ -466,10 +504,12 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   }
   // otherwise, create it & add the delta details to appropriate section
   const deltaLogSubject = deltaLogSubjectTemplate({ title: comment.link_title })
-  const deltaLogContent = deltaLogContentTemplate({
+  const deltaLogCreationParams = {
     opUsername: comment.link_author,
     linkToPost: comment.link_url,
-  })
+    comments: [mapDeltaLogCommentEntry(comment, parentThing)],
+  }
+  const deltaLogContent = formatDeltaLogContent(deltaLogCreationParams)
   const postParams = {
     api_type: 'json',
     kind: 'self',
@@ -489,7 +529,6 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
     deltaLogPostID: postDetails.data.id,
   }
   deltaLogKnownPosts.push(wikiPostObject)
-  await addDeltaToLog(linkID, comment, parentThing, wikiPostObject, deltaLogContent)
   await distinguishThing({ id: `t3_${postDetails.data.id}`, how: 'yes', sticky: false })
   return wikiPostObject
 }
