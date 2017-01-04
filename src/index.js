@@ -364,7 +364,7 @@ const loadDeltaLogFromWiki = async () => {
   if (rawInternalWikiText.error) throw Error(rawInternalWikiText)
   const wikiTextMd = _.get(rawInternalWikiText, 'data.content_md')
   if (isDebug) console.log('WIKI internal GET:', wikiTextMd)
-  return parseHiddenParams(wikiTextMd)
+  return parseHiddenParams(wikiTextMd) || []
 }
 // used for storing both sticky comment info in original post, which links to the DeltaLog mirror
 let deltaLogKnownPosts = null
