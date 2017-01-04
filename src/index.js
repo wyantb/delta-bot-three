@@ -857,10 +857,15 @@ const checkMessagesforDeltas = async () => {
             created_utc,
             created,
           } = _.get(response, '[1].data.children[0].data')
-          const { title: link_title, url: link_url } = _.get(response, '[0].data.children[0].data')
+          const {
+            author: link_author,
+            title: link_title,
+            url: link_url,
+          } = _.get(response, '[0].data.children[0].data')
           const comment = {
             link_title,
             link_id,
+            link_author,
             author,
             body,
             body_html,
