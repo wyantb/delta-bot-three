@@ -295,7 +295,7 @@ ${mapDataToTable(newHiddenParams.monthly)}
       // if any data has changed, update the wiki
       if (!_.isEqual(oldHiddenParams, newHiddenParams)) {
         // create the wiki output
-        const wikiOutput = `[**&#8656; back to main wiki page**](http://reddit.com/r/${subreddit}/wiki)
+        const wikiOutput = `[**&#8656; wiki index**](http://reddit.com/r/${subreddit}/wiki)
 
 _____
 
