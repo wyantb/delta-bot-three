@@ -3,6 +3,7 @@ import { stringify } from 'query-string'
 import moment from 'moment'
 import Api from './reddit-api-driver'
 import parseHiddenParams from './parse-hidden-params'
+import stringifyObjectToBeHidden from './stringify-hidden-params'
 import getWikiContent from './get-wiki-content'
 import { escapeUnderscore } from './utils'
 
@@ -30,14 +31,6 @@ class DeltaBoardsThree {
   }
   async startJob() {
     // define methods on top of scope of where it will be used
-
-    // this method return a string that allows us to add metadata
-    // to a listing without being seen by anybody other than DB3
-    /* eslint-disable no-irregular-whitespace */
-    const stringifyObjectToBeHidden = input => (
-      `[​](HTTP://DB3PARAMSSTART\n${JSON.stringify(input, null, 2)}\nDB3PARAMSEND)`
-    )
-    /* eslint-enable no-irregular-whitespace */
 
     // get the date variables ready
     const now = new Date()
