@@ -13,6 +13,7 @@ import Router from 'koa-router'
 import fs from 'fs'
 import { stringify } from 'query-string'
 import path from 'path'
+import { AllHtmlEntities as entities } from 'html-entities'
 // import bodyParser from 'koa-bodyparser'
 import Reddit from './reddit-api-driver'
 import DeltaBoardsThree from './delta-boards-three'
@@ -379,11 +380,12 @@ const truncateAwardedText = (text) => {
 }
 const formatAwardedText = (text) => {
   /* eslint-disable no-useless-escape */
-  const textWithoutLinks = text
+  const textWithoutQuotes = entities.decode(text) // html decode the text
+    .replace(/>[^]*\n/, '') // remove quotes
     .replace(/\n+/g, ' ') // one or more newlines -> just one space
-    .replace(/\[(.+)\]\(.+\)/, '$1') // links like `[foo](URL)` -> just `foo` in log line
+    .replace(/\[(.+)\]\(.+\)/g, '$1') // links like `[foo](URL)` -> just `foo` in log line
   /* eslint-enable no-useless-escape */
-  return truncateAwardedText(textWithoutLinks)
+  return truncateAwardedText(textWithoutQuotes)
 }
 
 /* Invoked after the DeltaLog post is made, so `deltaLogKnownPosts` will be populated */
@@ -422,43 +424,94 @@ const loadPostText = async (deltaLogPostID) => {
   return postData.selftext
 }
 
-/* Updates a DeltaLog post, appending to the appropriate section (op/not op) */
+const mapDeltaLogCommentEntry = (comment, parentThing) => ({
+  awardingUsername: comment.author,
+  awardedUsername: parentThing.author,
+  awardedText: formatAwardedText(parentThing.body),
+  awardedLink: comment.link_url + parentThing.id,
+  deltaCommentFullName: comment.name,
+})
+
+/* Replaces the "From OP" section contents with appropriate comment links */
 const deltaLogOPEntryTemplate = _.template(i18n[locale].deltaLogOPEntry)
-const deltaLogOtherEntryTemplate = _.template(i18n[locale].deltaLogOtherEntry)
-const addDeltaToLog = async (linkID, comment, parentThing, existingPost, knownPostText) => {
-  const wasByAuthor = wasDeltaMadeByAuthor(comment)
-  const sectionToAppend = wasByAuthor ? '[](HTTP://DB3-FROMOP' : '[](HTTP://DB3-FROMOTHER'
-  const appliedTemplate = wasByAuthor ? deltaLogOPEntryTemplate : deltaLogOtherEntryTemplate
-  const postText = knownPostText != null ?
-    knownPostText : (await loadPostText(existingPost.deltaLogPostID))
-  const commentTemplateArgs = {
-    awardingUsername: comment.author,
-    awardedUsername: parentThing.author,
-    awardedText: formatAwardedText(parentThing.body),
-    awardedLink: comment.link_url + parentThing.id,
+const logOpComments = (comments, postBase) => {
+  const REPLACE_SECTION = '[](HTTP://DB3-FROMOP)'
+  if (_.isEmpty(comments)) {
+    return postBase.replace(REPLACE_SECTION, i18n[locale].deltaLogNoneYet)
   }
-  const commentText = appliedTemplate(commentTemplateArgs)
-  const updatedText = postText.replace(sectionToAppend, `${commentText}\n\n${sectionToAppend}`)
+  return _.reduce(comments, (postSoFar, comment) => {
+    const commentString = deltaLogOPEntryTemplate(comment)
+    return postSoFar.replace(REPLACE_SECTION, `${commentString}\n${REPLACE_SECTION}`)
+  }, postBase)
+}
+
+/* Replaces the "From Other Users" section contents with appropriate comment links */
+const deltaLogOtherEntryTemplate = _.template(i18n[locale].deltaLogOtherEntry)
+const logOtherComments = (comments, postBase) => {
+  const REPLACE_SECTION = '[](HTTP://DB3-FROMOTHER)'
+  if (_.isEmpty(comments)) {
+    return postBase.replace(REPLACE_SECTION, i18n[locale].deltaLogNoneYet)
+  }
+  return _.reduce(comments, (postSoFar, comment) => {
+    const commentString = deltaLogOtherEntryTemplate(comment)
+    return postSoFar.replace(REPLACE_SECTION, `${commentString}\n${REPLACE_SECTION}`)
+  }, postBase)
+}
+
+const groupCommentsByOp = hiddenParams => _.partition(
+  hiddenParams.comments, { awardingUsername: hiddenParams.opUsername }
+)
+
+/* Given a JSON object like the hidden param on deltalog pages, produces the output page */
+const deltaLogContentTemplate = _.template(i18n[locale].deltaLogContent)
+const formatDeltaLogContent = (deltaLogCreationParams) => {
+  const { opUsername, linkToPost } = deltaLogCreationParams
+  const deltaLogBaseContent = deltaLogContentTemplate({
+    opUsername,
+    linkToPost,
+  })
+  const [commentsByOP, commentsByOther] = groupCommentsByOp(deltaLogCreationParams)
+  const deltaLogContent = logOpComments(
+    commentsByOP,
+    logOtherComments(commentsByOther, deltaLogBaseContent)
+  )
+  return `${deltaLogContent}\n${stringifyObjectToBeHidden(deltaLogCreationParams)}`
+}
+
+const updateDeltaLogPostFromHiddenParams = async (hiddenParams, deltaLogPostID) => {
+  const newDeltaLogContent = formatDeltaLogContent(hiddenParams)
   const updateParams = {
-    text: updatedText,
-    thing_id: `t3_${existingPost.deltaLogPostID}`,
+    text: newDeltaLogContent,
+    thing_id: `t3_${deltaLogPostID}`,
   }
   const updateResponse = await reddit.query({
     URL: `/api/editusertext?${stringify(updateParams)}`,
     method: 'POST',
   })
   if (updateResponse.error) throw Error(updateResponse.error)
+}
+
+/* Updates a DeltaLog post, appending to the appropriate section (op/not op) */
+const addDeltaToLog = async (linkID, comment, parentThing, existingPost) => {
+  const postText = await loadPostText(existingPost.deltaLogPostID)
+  const deltaLogCreationParams = parseHiddenParams(postText)
+  deltaLogCreationParams.comments.push(mapDeltaLogCommentEntry(comment, parentThing))
+  await updateDeltaLogPostFromHiddenParams(deltaLogCreationParams, existingPost.deltaLogPostID)
   return true
+}
+
+const findDeltaLogPost = async linkID => {
+  // first, load the Delta Log database from the wiki
+  if (deltaLogKnownPosts == null) {
+    deltaLogKnownPosts = await loadDeltaLogFromWiki()
+  }
+  return _.find(deltaLogKnownPosts, { originalPostID: linkID })
 }
 
 /* Makes delta log posts & updates OP/Other Users sections */
 const deltaLogSubjectTemplate = _.template(i18n[locale].deltaLogTitle)
-const deltaLogContentTemplate = _.template(i18n[locale].deltaLogContent)
 const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
-  if (deltaLogKnownPosts == null) {
-    deltaLogKnownPosts = await loadDeltaLogFromWiki()
-  }
-  const possiblyExistingPost = _.find(deltaLogKnownPosts, { originalPostID: linkID })
+  const possiblyExistingPost = await findDeltaLogPost(linkID)
   // if the log post already exists, all we'll need to do is update
   if (possiblyExistingPost != null) {
     await addDeltaToLog(linkID, comment, parentThing, possiblyExistingPost)
@@ -466,10 +519,12 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   }
   // otherwise, create it & add the delta details to appropriate section
   const deltaLogSubject = deltaLogSubjectTemplate({ title: comment.link_title })
-  const deltaLogContent = deltaLogContentTemplate({
+  const deltaLogCreationParams = {
     opUsername: comment.link_author,
     linkToPost: comment.link_url,
-  })
+    comments: [mapDeltaLogCommentEntry(comment, parentThing)],
+  }
+  const deltaLogContent = formatDeltaLogContent(deltaLogCreationParams)
   const postParams = {
     api_type: 'json',
     kind: 'self',
@@ -489,13 +544,12 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
     deltaLogPostID: postDetails.data.id,
   }
   deltaLogKnownPosts.push(wikiPostObject)
-  await addDeltaToLog(linkID, comment, parentThing, wikiPostObject, deltaLogContent)
   await distinguishThing({ id: `t3_${postDetails.data.id}`, how: 'yes', sticky: false })
   return wikiPostObject
 }
 
 /* Updates the delta log hidden contents with known CMV posts -> DeltaLog posts & sticky comments */
-const updateDeltaLogWikiLinks = async (/*linkID, comment, deltaLogPost, stickiedComment*/) => {
+const updateDeltaLogWikiLinks = async () => {
   const postParams = {
     content: stringifyObjectToBeHidden(deltaLogKnownPosts),
     page: 'internal',
@@ -824,6 +878,63 @@ const checkMessagesforDeltas = async () => {
                 }
               )
               await updateFlair({ name: parentUserName, flairCount })
+
+              // if Delta Log is enabled, delete stuff related to that
+              if (deltaLogEnabled) {
+                // grab the relevant info from the comment
+                const { link_id: linkId, name: deltaCommentName } = comment
+
+                // find the deltaLog JSON related to the comment
+                const deltaLogPostDataJson = await findDeltaLogPost(linkId)
+                if (deltaLogPostDataJson) {
+                  // get the hidden parameters from the post
+                  // first, get the post text
+                  const postText = await loadPostText(deltaLogPostDataJson.deltaLogPostID)
+                  // then, parse the hidden parameters from the post text
+                  const postTextHiddenParams = parseHiddenParams(postText)
+
+                  // generate new hidden parameters with the comment data removed
+                  const newPostTextHiddenParams = _.cloneDeep(postTextHiddenParams)
+                  newPostTextHiddenParams.comments = _.reject(
+                    postTextHiddenParams.comments, { deltaCommentFullName: deltaCommentName }
+                  )
+
+                  // get arrays of comments from OP and comments
+                  const [commentsByOP] = groupCommentsByOp(newPostTextHiddenParams)
+
+                  // delete the sticky comment if there are no comments by OP
+                  if (commentsByOP.length === 0 && 'stickiedCommentID' in deltaLogPostDataJson) {
+                    await reddit.query({
+                      URL: '/api/del',
+                      method: 'POST',
+                      body: stringify({ id: deltaLogPostDataJson.stickiedCommentID }),
+                    })
+                    delete deltaLogPostDataJson.stickiedCommentID
+                  }
+
+                  console.log(newPostTextHiddenParams)
+                  if (_.get(newPostTextHiddenParams, 'comments.length') === 0) {
+                    // if there are no comments, delete the whole post
+                    await reddit.query({
+                      URL: '/api/del',
+                      method: 'POST',
+                      body: stringify({ id: `t3_${deltaLogPostDataJson.deltaLogPostID}` }),
+                    })
+
+                    // delete the post from the delta log database
+                    deltaLogKnownPosts = _.reject(deltaLogKnownPosts, { originalPostID: linkId })
+                  } else {
+                    // if there are comments, update it
+                    updateDeltaLogPostFromHiddenParams(
+                      newPostTextHiddenParams,
+                      deltaLogPostDataJson.deltaLogPostID
+                    )
+                  }
+
+                  // update the internal wiki database
+                  await updateDeltaLogWikiLinks()
+                }
+              }
             }
             // Delete the comment
             await reddit.query({
