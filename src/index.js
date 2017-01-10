@@ -485,8 +485,9 @@ const updateDeltaLogPostFromHiddenParams = async (hiddenParams, deltaLogPostID) 
     thing_id: `t3_${deltaLogPostID}`,
   }
   const updateResponse = await reddit.query({
-    URL: `/api/editusertext?${stringify(updateParams)}`,
+    URL: `/api/editusertext?${stringify({ thing_id: `t3_${deltaLogPostID}` })}`,
     method: 'POST',
+    body: stringify(updateParams),
   })
   if (updateResponse.error) throw Error(updateResponse.error)
 }
@@ -556,8 +557,9 @@ const updateDeltaLogWikiLinks = async () => {
     reason: 'DeltaBot update',
   }
   const update = await reddit.query({
-    URL: `/r/${credentials.deltaLogSubreddit}/api/wiki/edit?${stringify(postParams)}`,
+    URL: `/r/${credentials.deltaLogSubreddit}/api/wiki/edit`,
     method: 'POST',
+    body: stringify(postParams),
   })
   if (update.error) throw Error(update.error)
   return update
