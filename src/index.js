@@ -25,6 +25,7 @@ import {
   checkCommentForDelta,
   generateDeltaBotCommentFromDeltaComment,
   getDeltaBotReply,
+  getCommentAuthor,
 } from './utils'
 import upgradeConfig from './upgrade-config'
 
@@ -382,7 +383,7 @@ const loadDeltaLogFromWiki = async () => {
 // used for storing both sticky comment info in original post, which links to the DeltaLog mirror
 let deltaLogKnownPosts = null
 
-const wasDeltaMadeByAuthor = (comment) => comment.link_author === comment.author
+const wasDeltaMadeByAuthor = (comment) => comment.link_author === getCommentAuthor(comment)
 const TRUNCATE_AWARD_LENGTH = 200
 const truncateAwardedText = (text) => {
   if (text.length > TRUNCATE_AWARD_LENGTH) {
@@ -414,7 +415,7 @@ const findOrMakeStickiedComment = async (linkID, comment, deltaLogPost) => {
     content: {
       thing_id: linkID,
       text: deltaLogStickyTemplate({
-        username: comment.author,
+        username: getCommentAuthor(comment),
         linkToPost: `/r/${deltaLogSubreddit}/comments/${deltaLogPost.deltaLogPostID}`,
         deltaLogSubreddit,
       }),
@@ -437,8 +438,8 @@ const loadPostText = async (deltaLogPostID) => {
 }
 
 const mapDeltaLogCommentEntry = (comment, parentThing) => ({
-  awardingUsername: comment.author,
-  awardedUsername: parentThing.author,
+  awardingUsername: getCommentAuthor(comment),
+  awardedUsername: getCommentAuthor(parentThing),
   awardedText: formatAwardedText(parentThing.body),
   awardedLink: comment.link_url + parentThing.id,
   deltaCommentFullName: comment.name,

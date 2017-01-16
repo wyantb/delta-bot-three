@@ -3,6 +3,8 @@ import _ from 'lodash'
 
 export const escapeUnderscore = string => string.replace(/_/g, '\\_')
 
+export const getCommentAuthor = comment => _.get(comment, 'author.name') || _.get(comment, 'author')
+
 export const checkCommentForDelta = comment => {
   const { body_html } = comment
   // this removes the text that are in quotes
