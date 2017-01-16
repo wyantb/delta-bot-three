@@ -5,3 +5,4 @@ state.json
 dist
 .idea
 *.log
+config
