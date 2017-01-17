@@ -583,7 +583,6 @@ const updateDeltaLogWikiLinks = async () => {
 export const verifyThenAward = async (comment) => {
   const {
     created_utc: createdUTC,
-    author,
     link_id: linkID,
     link_title: linkTitle,
     link_url: linkURL,
