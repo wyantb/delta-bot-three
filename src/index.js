@@ -605,13 +605,13 @@ export const verifyThenAward = async (comment) => {
           id,
           linkTitle,
           linkURL,
-          author,
+          author: getCommentAuthor(comment),
           createdUTC,
           action: 'add',
         }
       )
       let text = i18n[locale].awardDelta
-      text = text.replace(/USERNAME/g, parentThing.author)
+      text = text.replace(/USERNAME/g, getCommentAuthor(parentThing))
         .replace(/DELTAS/g, flairCount)
         .replace(/SUBREDDIT/g, subreddit)
       if (query.text.length) query.text += '\n\n'
