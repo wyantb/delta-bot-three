@@ -13,7 +13,6 @@ import Router from 'koa-router'
 import fs from 'fs'
 import { stringify } from 'query-string'
 import path from 'path'
-import { AllHtmlEntities as entities } from 'html-entities'
 // import bodyParser from 'koa-bodyparser'
 import Reddit from './reddit-api-driver'
 import DeltaBoardsThree from './delta-boards-three'
@@ -27,6 +26,7 @@ import {
   getWikiContent,
   parseHiddenParams,
   stringifyObjectToBeHidden,
+  formatAwardedText,
 } from './utils'
 import upgradeConfig from './upgrade-config'
 
@@ -385,22 +385,6 @@ const loadDeltaLogFromWiki = async () => {
 let deltaLogKnownPosts = null
 
 const wasDeltaMadeByAuthor = (comment) => comment.link_author === getCommentAuthor(comment)
-const TRUNCATE_AWARD_LENGTH = 200
-const truncateAwardedText = (text) => {
-  if (text.length > TRUNCATE_AWARD_LENGTH) {
-    return `${text.substring(0, TRUNCATE_AWARD_LENGTH)}...`
-  }
-  return text
-}
-const formatAwardedText = (text) => {
-  /* eslint-disable no-useless-escape */
-  const textWithoutQuotes = entities.decode(text) // html decode the text
-    .replace(/>[^]*?\n\n/g, '[Quote] ') // replace quotes
-    .replace(/\n+/g, ' ') // one or more newlines -> just one space
-    .replace(/\[(.+)\]\(.+\)/g, '$1') // links like `[foo](URL)` -> just `foo` in log line
-  /* eslint-enable no-useless-escape */
-  return truncateAwardedText(textWithoutQuotes)
-}
 
 /* Invoked after the DeltaLog post is made, so `deltaLogKnownPosts` will be populated */
 const deltaLogStickyTemplate = _.template(i18n[locale].deltaLogSticky)

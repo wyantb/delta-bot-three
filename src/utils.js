@@ -180,3 +180,20 @@ export const stringifyObjectToBeHidden = input => (
     JSON.stringify(input, null, 2).replace(/\)/g, '-paren---')
   }\nDB3PARAMSEND)`
 )
+
+const TRUNCATE_AWARD_LENGTH = 200
+const truncateAwardedText = (text) => {
+  if (text.length > TRUNCATE_AWARD_LENGTH) {
+    return `${text.substring(0, TRUNCATE_AWARD_LENGTH)}...`
+  }
+  return text
+}
+export const formatAwardedText = (text) => {
+  /* eslint-disable no-useless-escape */
+  const textWithoutQuotes = entities.decode(text) // html decode the text
+    .replace(/>[^]*?\n\n/g, '[Quote] ') // replace quotes
+    .replace(/\n+/g, ' ') // one or more newlines -> just one space
+    .replace(/\[([^\]]+?)\]\([^)]+?\)/g, '$1') // links like `[foo](URL)` -> just `foo` in log line
+  /* eslint-enable no-useless-escape */
+  return truncateAwardedText(textWithoutQuotes)
+}
