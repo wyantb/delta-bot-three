@@ -21,7 +21,7 @@ class CheckEditedComments extends DeltaBotModule {
     const editedComments = await this.reddit
       .getSubreddit(this.subreddit)
       .getEdited({ only: 'comments' })
-    editedComments.forEach(async (comment) => {
+    await Promise.all(editedComments.map(async (comment) => {
       if (checkCommentForDelta(comment)) {
         console.log('There is a delta in here! Check if Delta Bot replied!')
         const commentWithReplies = await this.reddit
@@ -49,7 +49,7 @@ class CheckEditedComments extends DeltaBotModule {
           }
         }
       }
-    })
+    }))
     // set the timeout here in case it takes long or hangs,
     // so it doesn't fire off multiple time at once
     setTimeout(() => this.scanForEditedComments(), 60000)
