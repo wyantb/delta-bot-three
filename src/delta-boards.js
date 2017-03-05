@@ -102,7 +102,7 @@ class DeltaBoards {
 
       // if any data has changed, update the wiki
       if (!_.isEqual(oldHiddenParams, newHiddenParams)) {
-        await this.saveDailyWeeklyMonthlyDeltaboards(newHiddenParams)
+        await this.renderDeltaboardsWiki(newHiddenParams)
       } else {
         console.log('No Deltaboard data has changed. Won\'t update the wiki')
       }
@@ -132,7 +132,7 @@ class DeltaBoards {
       .join('\n')
   }
 
-  async saveDailyWeeklyMonthlyDeltaboards(newHiddenParams) {
+  async renderDeltaboardsWiki(newHiddenParams) {
     const { api, subreddit } = this
 
     // newHiddenParams the data
@@ -398,7 +398,8 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
       username: user[0], deltaCount: user[1], newestDeltaTime: 0,
     }))
 
-    await this.saveYearlyDeltaboard(yearly)
+    const newHiddenParams = await this.generateNewHiddenParamsWithYearly(yearly)
+    await this.renderDeltaboardsWiki(newHiddenParams)
 
     setTimeout(() => this.updateYearlyDeltaboard(), 3 * 3600 * 1000) // run again in 3 hours
   }
@@ -432,10 +433,10 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     }
 
     const threadUrls = await this.getPeriodThreadUrls(startOfPeriod, endOfPeriod)
-    const deltas = []
+    const deltas = {}
 
     // fetch the comments of all threads and analyse if there were deltas given out
-    threadUrls.forEach(async (threadUrl) => {
+    await Promise.all(threadUrls.map(async (threadUrl) => {
       const response = await api.query(threadUrl, true)
 
       if (response[1].data.children) {
@@ -478,7 +479,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
 
         checkAllChildren(response[1].data)
       }
-    })
+    }))
 
     return deltas
   }
@@ -530,10 +531,10 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     return threadUrls
   }
 
-  async saveYearlyDeltaboard(yearly) {
+  async generateNewHiddenParamsWithYearly(yearly) {
     const { api, subreddit } = this
 
-    // grab the newHiddenParams from the wiki page
+    // grab the current hidden parameters from the wiki page
     const wikiPage = 'deltaboards'
     const deltaBoardsWikiContent = await getWikiContent({ api, subreddit, wikiPage })
     const hiddenParams = parseHiddenParams(deltaBoardsWikiContent)
@@ -544,25 +545,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
 
     hiddenParams.yearly = yearly
 
-    const hiddenSection = deltaBoardsWikiContent.match(/DB3PARAMSSTART[^]+DB3PARAMSEND/)[0].slice(
-      'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length,
-    )
-
-    const newWikiContent = deltaBoardsWikiContent.replace(
-      hiddenSection, JSON.stringify(hiddenParams, null, 2).replace(/\)/g, '-paren---'),
-    )
-
-    // define update wiki parameters
-    const updateWikiQuery = {
-      page: 'deltaboards',
-      reason: 'updated yearly deltaboard',
-      content: newWikiContent,
-    }
-
-    // updateWikiResponse
-    await api.query(
-      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) },
-    )
+    return hiddenParams
   }
 }
 
