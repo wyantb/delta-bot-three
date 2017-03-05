@@ -20,13 +20,13 @@ class DeltaBotModule {
       const moduleCredentialsPath = path.join(
         process.cwd(),
         'config/credentials',
-        `${this.fileName}.json`
+        `${this.fileName}.json`,
       )
       return fsp.readJsonSync(moduleCredentialsPath)
     } catch (expectedError) {
       const defaultCredentialsPath = path.join(
         process.cwd(),
-        'config/credentials/credentials.json'
+        'config/credentials/credentials.json',
       )
       return fsp.readJsonSync(defaultCredentialsPath)
     }

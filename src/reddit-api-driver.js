@@ -109,7 +109,7 @@ module.exports = class RedditAPIDriver {
                 'x-ratelimit-used',
                 'x-ratelimit-remaining',
                 'x-ratelimit-reset',
-              ]
+              ],
             )
             if (Object.keys(headers).length) console.log(rateHeaders)
             if (this.flags.isDebug) {

@@ -8,7 +8,7 @@ export const escapeUnderscore = string => string.replace(/_/g, '\\_')
 
 export const getCommentAuthor = comment => _.get(comment, 'author.name') || _.get(comment, 'author')
 
-export const checkCommentForDelta = comment => {
+export const checkCommentForDelta = (comment) => {
   const { body_html } = comment
   // this removes the text that are in quotes
   const removedBodyHTML = (
@@ -56,7 +56,7 @@ export const generateDeltaBotCommentFromDeltaComment = async ({
     text: '',
   }
   const json = await reddit.query(
-      `/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`
+      `/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`,
   )
   if (json.error) throw Error(json.error)
   const parentThing = json[1].data.children[0].data
@@ -71,7 +71,7 @@ export const generateDeltaBotCommentFromDeltaComment = async ({
       ) && bypassOPCheck === false
   ) {
     console.log(
-      `BAILOUT parent author, ${parentThing.author} is listing author, ${listing.author}`
+      `BAILOUT parent author, ${parentThing.author} is listing author, ${listing.author}`,
     )
     const text = i18n[locale].noAward.op
     issues.op = 1
@@ -154,7 +154,7 @@ export const getWikiContent = async ({ api, subreddit, wikiPage }) => {
   try {
     const resp = await api.query(`/r/${subreddit}/wiki/${wikiPage}`, true, true)
     const html = resp.match(
-      /<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/
+      /<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/,
     )[0].replace(/<textarea readonly class="source" rows="20" cols="20">|<\/textarea>/g, '')
     return entities.decode(html)
   } catch (err) {
@@ -162,11 +162,11 @@ export const getWikiContent = async ({ api, subreddit, wikiPage }) => {
   }
 }
 
-export const parseHiddenParams = string => {
+export const parseHiddenParams = (string) => {
   try {
     const hiddenSection = string.match(/DB3PARAMSSTART[^]+DB3PARAMSEND/)[0]
     const stringParams = hiddenSection.slice(
-      'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length
+      'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length,
     ).replace(/&quot;/g, '"').replace(/-paren---/g, ')')
     return JSON.parse(entities.decode(stringParams))
   } catch (error) {

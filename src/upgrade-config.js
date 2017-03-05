@@ -41,7 +41,7 @@ export default () => {
 
   const directoryFileNames = fsp.readdirSync(path.join(process.cwd(), 'config/credentials'))
   let changed
-  _.forEach(directoryFileNames, fileName => {
+  _.forEach(directoryFileNames, (fileName) => {
     const credentialsFilePath = path.join(process.cwd(), 'config/credentials', fileName)
     const credentialsJson = fsp.readJsonSync(credentialsFilePath)
     changed = false

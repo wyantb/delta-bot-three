@@ -185,7 +185,7 @@ ${stringifiedNewHiddenParams}
 
     // updateWikiResponse
     await api.query(
-      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) }
+      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) },
     )
   }
 
@@ -211,8 +211,8 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         new RegExp(
           '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
           '([^]+)' +
-          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
-        )
+          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)',
+        ),
       )[1]
     } catch (err) {
       sideBar += '[​](HTTP://DB3 AUTO UPDATES START HERE)' +
@@ -222,8 +222,8 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         new RegExp(
           '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
           '([^]+)' +
-          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
-        )
+          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)',
+        ),
       )[1]
     }
     // replace the old deltaboards sidebar with the new one
@@ -245,7 +245,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
 
     // updateSideBar
     await api.query(
-      { URL: '/api/site_admin', method: 'POST', body: stringify(updateSideBarQuery) }
+      { URL: '/api/site_admin', method: 'POST', body: stringify(updateSideBarQuery) },
     )
   }
 
@@ -256,10 +256,10 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     const nowMonth = now.getMonth()
     const nowYear = now.getFullYear()
     const dateOfThisMonday = new Date(
-      moment().set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).isoWeekday(1).format()
+      moment().set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).isoWeekday(1).format(),
     )
     const dateOfThisSunday = new Date(
-      moment().set({ hour: 23, minute: 59, second: 59, millisecond: 0 }).isoWeekday(7).format()
+      moment().set({ hour: 23, minute: 59, second: 59, millisecond: 0 }).isoWeekday(7).format(),
     )
     const dateOfFirstDayOfThisMonth = new Date(nowYear, nowMonth)
 
@@ -288,8 +288,10 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         after,
       }
       const { api } = this
+      /* eslint-disable no-await-in-loop */
       const commentJson = await api.query(
-        `/user/${this.credentials.username}/comments?${stringify(commentQuery)}`
+      /* eslint-enable no-await-in-loop */
+        `/user/${this.credentials.username}/comments?${stringify(commentQuery)}`,
       )
       after = _.get(commentJson, 'data.after')
       if (!after) noMoreComments = true
@@ -297,25 +299,25 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
       // grab the relevant data into a variable
       const children = _.get(commentJson, 'data.children')
 
-      // loop through each comment
-      for (const child of children) {
-        // define methods on top of scope of where it will be used
-
-        // this adds a delta to the deltaBoards. This mutates the board object
-        const addDelta = ({ board, username, time }) => {
-          // if the username is there already, up the deltacount
-          if (username in board) ++board[username].deltaCount
-          // if it is not there, create the base
-          // because it is looping oldest first, the newestDeltaTime is the first one
-          // it sees.
-          else {
-            board[username] = {
-              deltaCount: 1,
-              newestDeltaTime: time,
-            }
+      // this adds a delta to the deltaBoards. This mutates the board object
+      const addDelta = ({ board, username, time }) => {
+        // if the username is there already, up the deltacount
+        if (username in board) board[username].deltaCount += 1
+        // if it is not there, create the base
+        // because it is looping oldest first, the newestDeltaTime is the first one
+        // it sees.
+        else {
+          board[username] = {
+            deltaCount: 1,
+            newestDeltaTime: time,
           }
         }
+      }
 
+      // loop through each comment
+      /* eslint-disable no-loop-func */
+      children.every((child) => {
+      /* eslint-enable no-loop-func */
         // grab data from the response and put into variables
         const { body, created_utc: createdUtc } = child.data
 
@@ -377,9 +379,10 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         // break when all comments needed are parsed
         if (oldestDateParsed <= stopBeforeThisDate) {
           console.log('broke out of the for loop because oldestDateParsed >= stopBeforeThisDate')
-          break
+          return false
         }
-      }
+        return true
+      })
     }
 
     return deltaBoards
@@ -391,9 +394,9 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
 
     const yearly = []
 
-    for (const user of topTenYear) {
-      yearly.push({ username: user[0], deltaCount: user[1], newestDeltaTime: 0 })
-    }
+    topTenYear.forEach(user => yearly.push({
+      username: user[0], deltaCount: user[1], newestDeltaTime: 0,
+    }))
 
     await this.saveYearlyDeltaboard(yearly)
 
@@ -432,7 +435,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     const deltas = []
 
     // fetch the comments of all threads and analyse if there were deltas given out
-    for (const threadUrl of threadUrls) {
+    threadUrls.forEach(async (threadUrl) => {
       const response = await api.query(threadUrl, true)
 
       if (response[1].data.children) {
@@ -442,7 +445,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
             return
           }
 
-          for (const child of data.children) {
+          data.children.forEach((child) => {
             if (child.data.replies) {
               checkAllChildren(child.data.replies.data)
             }
@@ -465,17 +468,17 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
                       deltas[parentUserName] = 0
                     }
 
-                    deltas[parentUserName]++
+                    deltas[parentUserName] += 1
                   }
                 }
               }
             }
-          }
+          })
         }
 
         checkAllChildren(response[1].data)
       }
-    }
+    })
 
     return deltas
   }
@@ -500,16 +503,20 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         restrict_sr: 'on',
       }
 
+      /* eslint-disable no-await-in-loop */
       const response = await api.query(
+      /* eslint-enable no-await-in-loop */
         `/r/${this.subreddit}/search.json?${stringify(threadQuery)}`,
-        true
+        true,
       )
 
       if (response.data.children.length === 0) {
         finished = true
       }
 
-      for (const child of response.data.children) {
+      /* eslint-disable no-loop-func */
+      response.data.children.forEach((child) => {
+      /* eslint-enable no-loop-func */
         threadUrls.push(`/r/${this.subreddit}/comments/${child.data.id}.json`)
 
         const { created_utc: createdUtc } = child.data
@@ -517,7 +524,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         if (childDate < endOfPeriod) {
           endOfPeriod = childDate
         }
-      }
+      })
     }
 
     return threadUrls
@@ -538,11 +545,11 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     hiddenParams.yearly = yearly
 
     const hiddenSection = deltaBoardsWikiContent.match(/DB3PARAMSSTART[^]+DB3PARAMSEND/)[0].slice(
-      'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length
+      'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length,
     )
 
     const newWikiContent = deltaBoardsWikiContent.replace(
-      hiddenSection, JSON.stringify(hiddenParams, null, 2).replace(/\)/g, '-paren---')
+      hiddenSection, JSON.stringify(hiddenParams, null, 2).replace(/\)/g, '-paren---'),
     )
 
     // define update wiki parameters
@@ -554,7 +561,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
 
     // updateWikiResponse
     await api.query(
-      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) }
+      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) },
     )
   }
 }

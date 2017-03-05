@@ -9,6 +9,7 @@
     "linebreak-style": [0],
     "global-require": [0],
     "no-param-reassign": [2, {"props": false}],
-    "import/prefer-default-export": [0]
+    "import/prefer-default-export": [0],
+    "import/no-dynamic-require": [0]
   }
 }
