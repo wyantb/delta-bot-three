@@ -4,13 +4,12 @@
   "description": "The third rewrite of delta bot",
   "main": "dist/index.js",
   "scripts": {
-    "start": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --inspect --enable-delta-log",
-    "startProduction": "forever cleanlogs && forever start --uid \"production\" -o out.log -e err.log ./dist/index.js --enable-delta-log",
-    "start-debug": "nodemon ./src/index.js -x babel-node -w ./i18n -w ./src -- --db3-debug --bypass-op-check --enable-delta-log",
-    "start-debug-inspector": "npm run test && npm run build && node-debug ./dist/index.js --db3-debug --bypass-op-check --enable-delta-log",
-    "test": "npm run eslint && jest && npm run build",
+    "start": "nodemon ./src/index.js -x node -w ./i18n -w ./src -- --inspect --enable-delta-log",
+    "startProduction": "forever cleanlogs && forever start --uid \"production\" -o out.log -e err.log ./src/index.js --enable-delta-log",
+    "start-debug": "nodemon ./src/index.js -x node -w ./i18n -w ./src -- --db3-debug --bypass-op-check --enable-delta-log",
+    "start-debug-inspector": "node-debug ./src/index.js --db3-debug --bypass-op-check --enable-delta-log",
+    "test": "npm run eslint && jest",
     "eslint": "eslint ./src",
-    "build": "babel src --out-dir dist --ignore spec.js",
     "list": "forever list",
     "cleanlogs": "forever cleanlogs",
     "stop": "forever stop production"

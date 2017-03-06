@@ -1,13 +1,13 @@
-import _ from 'lodash'
+const _ = require('lodash')
 
-import {
+const {
   checkCommentForDelta,
   generateDeltaBotCommentFromDeltaComment,
   getDeltaBotReply,
   parseHiddenParams,
-} from './../utils'
-import { verifyThenAward } from './../index'
-import DeltaBotModule from './delta-bot-module'
+} = require('./../utils')
+const { verifyThenAward } = require('./../index')
+const DeltaBotModule = require('./delta-bot-module')
 
 class CheckEditedComments extends DeltaBotModule {
   constructor(legacyRedditApi) {
@@ -56,4 +56,4 @@ class CheckEditedComments extends DeltaBotModule {
   }
 }
 
-export default CheckEditedComments
+module.exports = CheckEditedComments

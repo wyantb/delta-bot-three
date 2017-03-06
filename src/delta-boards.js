@@ -1,14 +1,14 @@
-import _ from 'lodash'
-import { stringify } from 'query-string'
-import moment from 'moment'
-import Api from './reddit-api-driver'
-import {
+const _ = require('lodash')
+const { stringify } = require('query-string')
+const moment = require('moment')
+const Api = require('./reddit-api-driver')
+const {
   escapeUnderscore,
   getParsedDate,
   getWikiContent,
   parseHiddenParams,
   stringifyObjectToBeHidden,
-} from './utils'
+} = require('./utils')
 
 class DeltaBoards {
   constructor({ subreddit, credentials, version, flags }) {
@@ -185,7 +185,7 @@ ${stringifiedNewHiddenParams}
 
     // updateWikiResponse
     await api.query(
-      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) },
+      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(updateWikiQuery) }
     )
   }
 
@@ -211,8 +211,8 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         new RegExp(
           '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
           '([^]+)' +
-          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)',
-        ),
+          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
+        )
       )[1]
     } catch (err) {
       sideBar += '[​](HTTP://DB3 AUTO UPDATES START HERE)' +
@@ -222,8 +222,8 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
         new RegExp(
           '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES START HERE(?: DB3PARAMSEND)?\\)' +
           '([^]+)' +
-          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)',
-        ),
+          '\\[.\\]\\(HTTP://(?:DB3PARAMSSTART )?DB3 AUTO UPDATES END HERE(?: DB3PARAMSEND)?\\)'
+        )
       )[1]
     }
     // replace the old deltaboards sidebar with the new one
@@ -245,7 +245,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
 
     // updateSideBar
     await api.query(
-      { URL: '/api/site_admin', method: 'POST', body: stringify(updateSideBarQuery) },
+      { URL: '/api/site_admin', method: 'POST', body: stringify(updateSideBarQuery) }
     )
   }
 
@@ -256,10 +256,10 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     const nowMonth = now.getMonth()
     const nowYear = now.getFullYear()
     const dateOfThisMonday = new Date(
-      moment().set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).isoWeekday(1).format(),
+      moment().set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).isoWeekday(1).format()
     )
     const dateOfThisSunday = new Date(
-      moment().set({ hour: 23, minute: 59, second: 59, millisecond: 0 }).isoWeekday(7).format(),
+      moment().set({ hour: 23, minute: 59, second: 59, millisecond: 0 }).isoWeekday(7).format()
     )
     const dateOfFirstDayOfThisMonth = new Date(nowYear, nowMonth)
 
@@ -291,7 +291,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
       /* eslint-disable no-await-in-loop */
       const commentJson = await api.query(
       /* eslint-enable no-await-in-loop */
-        `/user/${this.credentials.username}/comments?${stringify(commentQuery)}`,
+        `/user/${this.credentials.username}/comments?${stringify(commentQuery)}`
       )
       after = _.get(commentJson, 'data.after')
       if (!after) noMoreComments = true
@@ -508,7 +508,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
       const response = await api.query(
       /* eslint-enable no-await-in-loop */
         `/r/${this.subreddit}/search.json?${stringify(threadQuery)}`,
-        true,
+        true
       )
 
       if (response.data.children.length === 0) {
@@ -549,4 +549,4 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
   }
 }
 
-export default DeltaBoards
+module.exports = DeltaBoards

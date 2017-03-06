@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-escape, no-use-before-define, max-len */
 /* eslint-env jest */
-import path from 'path'
+const path = require('path')
 
 // first, dynamically grab the file name of what we're testing
 const fileName = path.basename(__filename)

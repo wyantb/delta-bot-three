@@ -1,8 +1,8 @@
-import fsp from 'fs-promise'
-import _ from 'lodash'
-import path from 'path'
+const fsp = require('fs-promise')
+const _ = require('lodash')
+const path = require('path')
 
-export default () => {
+module.exports = () => {
   const configJsonPath = path.join(process.cwd(), 'config/config.json')
   try {
     fsp.statSync(configJsonPath)

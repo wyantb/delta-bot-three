@@ -2,22 +2,22 @@
 Corner Cases
 Edited comments are not handled
 */
-import 'colors'
-import _ from 'lodash'
-import promisify from 'promisify-node'
-import mkdirp from 'mkdirp'
+require('colors')
+const _ = require('lodash')
+const promisify = require('promisify-node')
+const mkdirp = require('mkdirp')
 /*
-import Koa from 'koa'
-import Router from 'koa-router'
+const Koa = require('koa')
+const Router = require('koa-router')
 */
-import fs from 'fs'
-import { stringify } from 'query-string'
-import path from 'path'
-// import bodyParser from 'koa-bodyparser'
-import Reddit from './reddit-api-driver'
-import DeltaBoards from './delta-boards'
-import Modules from './modules'
-import {
+const fs = require('fs')
+const { stringify } = require('query-string')
+const path = require('path')
+// const bodyParser = require('koa-bodyparser')
+const Reddit = require('./reddit-api-driver')
+const DeltaBoards = require('./delta-boards')
+const Modules = require('./modules')
+const {
   checkCommentForDelta,
   generateDeltaBotCommentFromDeltaComment,
   getDeltaBotReply,
@@ -26,8 +26,8 @@ import {
   parseHiddenParams,
   stringifyObjectToBeHidden,
   formatAwardedText,
-} from './utils'
-import upgradeConfig from './upgrade-config'
+} = require('./utils')
+const upgradeConfig = require('./upgrade-config')
 
 upgradeConfig()
 
@@ -123,7 +123,7 @@ const getNewComments = async (recursiveList) => {
       lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
     }
     await fs.writeFile(
-      './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2),
+      './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
     )
     if (lastParsedCommentIDs.length === 0) {
       lastParsedCommentID = null
@@ -135,7 +135,7 @@ const getNewComments = async (recursiveList) => {
         lastParsedCommentIDs.push(_.get(stateResponse, ['data', 'children', i, 'data', 'name']))
       }
       await fs.writeFile(
-        './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2),
+        './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
       )
       lastParsedCommentID = lastParsedCommentIDs[0]
     }
@@ -156,7 +156,7 @@ const getNewComments = async (recursiveList) => {
       lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
     }
     await fs.writeFile(
-      './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2),
+      './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
     )
   }
   switch (true) {
@@ -188,7 +188,7 @@ const addOrRemoveDeltaToOrFromWiki = async ({
       }
       if (content) {
         const links = _.uniq(
-            content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+?context=2`, 'g')),
+            content.match(new RegExp(`/r/${subreddit}/comments/[^()[\\]]+?context=2`, 'g'))
         )
         const arrayFullnames = (
           _(links)
@@ -197,8 +197,8 @@ const addOrRemoveDeltaToOrFromWiki = async ({
               a[arrayIndex] = a[arrayIndex] || []
               a[arrayIndex].push(
                   `t1_${e.replace(
-                      e.slice(0, e.lastIndexOf('/') + 1), '',
-                  ).replace('?context=2', '')}`,
+                      e.slice(0, e.lastIndexOf('/') + 1), ''
+                  ).replace('?context=2', '')}`
               )
               return a
             }, [])
@@ -208,7 +208,7 @@ const addOrRemoveDeltaToOrFromWiki = async ({
           _.forEach(arrayFullnames, async (fullnames) => {
             try {
               const commentRes = await reddit.query(
-                  `/r/${subreddit}/api/info?${stringify({ id: fullnames })}`,
+                  `/r/${subreddit}/api/info?${stringify({ id: fullnames })}`
               )
               if (commentRes.error) throw Error(commentRes.error)
               const comments = _.get(commentRes, 'data.children')
@@ -218,7 +218,7 @@ const addOrRemoveDeltaToOrFromWiki = async ({
                 return array
               }, []).join(',')
               const listingsRes = await reddit.query(
-                  `/r/${subreddit}/api/info?${stringify({ id: fullLinkIds })}`,
+                  `/r/${subreddit}/api/info?${stringify({ id: fullLinkIds })}`
               )
               const listingsData = _.get(listingsRes, 'data.children')
               const titles = _.reduce(listingsData, (array, listing) => {
@@ -305,7 +305,7 @@ const addOrRemoveDeltaToOrFromWiki = async ({
     const [month, day, year] = [date.getMonth() + 1, date.getDate(), date.getFullYear()]
     const newRow = (
           `|${month}/${day}/${year}|[${t.replace(
-              /AXDK9vhFALCkjXPmwvSB/g, ')',
+              /AXDK9vhFALCkjXPmwvSB/g, ')'
           )}](${b})|[Link](${b}${dc}?context=2)|/u/${ab}|\r\n`
     )
     newContent += newRow
@@ -316,7 +316,7 @@ const addOrRemoveDeltaToOrFromWiki = async ({
     content: newContent,
   }
   const response = await reddit.query(
-      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(query) },
+      { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(query) }
   )
   if (response.error) throw Error(response.error)
   return flairCount
@@ -328,7 +328,7 @@ const updateFlair = async ({ name, flairCount }) => {
     text: `${flairCount}∆`,
   }
   const response = await reddit.query(
-    { URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' },
+    { URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' }
   )
   if (response.error) throw Error(response.error)
   return true
@@ -343,7 +343,7 @@ const sendIntroductoryMessage = async ({ username, flairCount }) => {
       text: introductoryTemplate({ username, subreddit }),
     }
     const response = await reddit.query(
-      { URL: `/r/${subreddit}/api/compose?${stringify(introMessageContent)}`, method: 'POST' },
+      { URL: `/r/${subreddit}/api/compose?${stringify(introMessageContent)}`, method: 'POST' }
     )
     if (response.error) throw Error(response.error)
   }
@@ -458,7 +458,7 @@ const logOtherComments = (comments, postBase) => {
 }
 
 const groupCommentsByOp = hiddenParams => _.partition(
-  hiddenParams.comments, { awardingUsername: hiddenParams.opUsername },
+  hiddenParams.comments, { awardingUsername: hiddenParams.opUsername }
 )
 
 /* Given a JSON object like the hidden param on deltalog pages, produces the output page */
@@ -472,7 +472,7 @@ const formatDeltaLogContent = (deltaLogCreationParams) => {
   const [commentsByOP, commentsByOther] = groupCommentsByOp(deltaLogCreationParams)
   const deltaLogContent = logOpComments(
     commentsByOP,
-    logOtherComments(commentsByOther, deltaLogBaseContent),
+    logOtherComments(commentsByOther, deltaLogBaseContent)
   )
   return `${deltaLogContent}\n${stringifyObjectToBeHidden(deltaLogCreationParams)}`
 }
@@ -519,7 +519,7 @@ const findOrMakeDeltaLogPost = async (linkID, comment, parentThing) => {
   }
   // otherwise, create it & add the delta details to appropriate section
   const deltaLogSubject = deltaLogSubjectTemplate(
-      { title: comment.link_title.replace('&amp;', '&') },
+      { title: comment.link_title.replace('&amp;', '&') }
   )
   const deltaLogCreationParams = {
     opUsername: comment.link_author,
@@ -566,7 +566,7 @@ const updateDeltaLogWikiLinks = async () => {
   return update
 }
 
-export const verifyThenAward = async (comment) => {
+exports.verifyThenAward = async (comment) => {
   const {
     created_utc: createdUTC,
     link_id: linkID,
@@ -607,7 +607,7 @@ export const verifyThenAward = async (comment) => {
           author: getCommentAuthor(comment),
           createdUTC,
           action: 'add',
-        },
+        }
       )
       let text = i18n[locale].awardDelta
       text = text.replace(/USERNAME/g, getCommentAuthor(parentThing))
@@ -668,7 +668,7 @@ const checkForDeltas = async () => {
         created_utc,
         created,
       }
-      if (checkCommentForDelta(comments[index])) await verifyThenAward(comments[index])
+      if (checkCommentForDelta(comments[index])) await exports.verifyThenAward(comments[index])
     })
   } catch (err) {
     console.log('Error!'.red)
@@ -764,7 +764,7 @@ const checkMessagesforDeltas = async () => {
       deleteCommentLinks.commentLinks = _.uniq(deleteCommentLinks.commentLinks)
       const getParentUserName = async ({ parent_id: parentId }) => {
         const parentComment = await reddit.query(
-            `/r/${subreddit}/api/info?${stringify({ id: parentId })}`,
+            `/r/${subreddit}/api/info?${stringify({ id: parentId })}`
         )
         return _.get(parentComment, 'data.children[0].data.author')
       }
@@ -813,7 +813,7 @@ const checkMessagesforDeltas = async () => {
                   user: parentUserName,
                   id: comment.id,
                   action: 'remove',
-                },
+                }
               )
               await updateFlair({ name: parentUserName, flairCount })
 
@@ -834,7 +834,7 @@ const checkMessagesforDeltas = async () => {
                   // generate new hidden parameters with the comment data removed
                   const newPostTextHiddenParams = _.cloneDeep(postTextHiddenParams)
                   newPostTextHiddenParams.comments = _.reject(
-                    postTextHiddenParams.comments, { deltaCommentFullName: deltaCommentName },
+                    postTextHiddenParams.comments, { deltaCommentFullName: deltaCommentName }
                   )
 
                   // get arrays of comments from OP and comments
@@ -865,7 +865,7 @@ const checkMessagesforDeltas = async () => {
                     // if there are comments, update it
                     updateDeltaLogPostFromHiddenParams(
                       newPostTextHiddenParams,
-                      deltaLogPostDataJson.deltaLogPostID,
+                      deltaLogPostDataJson.deltaLogPostID
                     )
                   }
 
@@ -935,7 +935,7 @@ const checkMessagesforDeltas = async () => {
           )
           if (!!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ/) ||
             !!removedBodyHTML.match(/!delta/i)) {
-            await verifyThenAward(comment)
+            await exports.verifyThenAward(comment)
           }
           /* eslint-enable no-await-in-loop */
         }
@@ -952,12 +952,12 @@ const checkMessagesforDeltas = async () => {
             {
               id: JSON.stringify(
                 [].concat(
-                  comments.names, deleteCommentLinks.names,
-                ),
+                  comments.names, deleteCommentLinks.names
+                )
               ).replace(/"|\[|]/g, ''),
-            },
+            }
           ),
-        },
+        }
       )
       if (read.error) throw Error(read.error)
     }
@@ -991,7 +991,7 @@ const entry = async () => {
         lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
       }
       await fs.writeFile(
-        './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2),
+        './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
       )
       lastParsedCommentID = lastParsedCommentIDs[0]
     }
@@ -1005,7 +1005,7 @@ const entry = async () => {
     /* eslint-disable import/no-unresolved */
     try {
       deltaBoardsCredentials = require(
-        path.resolve('./config/credentials/delta-boards-credentials.json'),
+        path.resolve('./config/credentials/delta-boards-credentials.json')
       )
     } catch (err) {
       console.log('Missing credentials for delta-boards! Using base creds as fallback!'.red)
@@ -1013,7 +1013,7 @@ const entry = async () => {
         deltaBoardsCredentials = require(path.resolve('./config/credentials/credentials.json'))
       } catch (secondErr) {
         console.log(
-          'Please contact the author for credentials or create your own credentials json!'.red,
+          'Please contact the author for credentials or create your own credentials json!'.red
         )
         logCredentialsFile()
       }

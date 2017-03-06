@@ -1,5 +1,4 @@
 {
-  "parser": "babel-eslint",
   "extends": "airbnb-base",
   "rules": {
     "semi": [2, "never"],
@@ -10,6 +9,13 @@
     "global-require": [0],
     "no-param-reassign": [2, {"props": false}],
     "import/prefer-default-export": [0],
-    "import/no-dynamic-require": [0]
+    "import/no-dynamic-require": [0],
+    "comma-dangle": [2, {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "imports": "always-multiline",
+        "exports": "always-multiline",
+        "functions": "never"
+    }]
   }
 }

@@ -1,10 +1,10 @@
-import 'colors'
-import formurlencoded from 'form-urlencoded'
-import fetch from 'node-fetch'
-import promisify from 'promisify-node'
-import fs from 'fs'
-import _ from 'lodash'
-import path from 'path'
+require('colors')
+const formurlencoded = require('form-urlencoded')
+const fetch = require('node-fetch')
+const promisify = require('promisify-node')
+const fs = require('fs')
+const _ = require('lodash')
+const path = require('path')
 
 fs.readFile = promisify(fs.readFile)
 
@@ -109,7 +109,7 @@ module.exports = class RedditAPIDriver {
                 'x-ratelimit-used',
                 'x-ratelimit-remaining',
                 'x-ratelimit-reset',
-              ],
+              ]
             )
             if (Object.keys(headers).length) console.log(rateHeaders)
             if (this.flags.isDebug) {

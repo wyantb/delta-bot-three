@@ -1,14 +1,14 @@
-import path from 'path'
-import _ from 'lodash'
+const path = require('path')
+const _ = require('lodash')
 
-import { AllHtmlEntities as entities } from 'html-entities'
+const { AllHtmlEntities: entities } = require('html-entities')
 
 
-export const escapeUnderscore = string => string.replace(/_/g, '\\_')
+exports.escapeUnderscore = string => string.replace(/_/g, '\\_')
 
-export const getCommentAuthor = comment => _.get(comment, 'author.name') || _.get(comment, 'author')
+exports.getCommentAuthor = comment => _.get(comment, 'author.name') || _.get(comment, 'author')
 
-export const checkCommentForDelta = (comment) => {
+exports.checkCommentForDelta = (comment) => {
   const { body_html } = comment
   // this removes the text that are in quotes
   const removedBodyHTML = (
@@ -32,7 +32,7 @@ const locale = 'en-us'
 const isDebug = _.some(process.argv, arg => arg === '--db3-debug')
 const i18n = require(path.resolve('i18n'))
 const bypassOPCheck = _.some(process.argv, arg => arg === '--bypass-op-check')
-export const generateDeltaBotCommentFromDeltaComment = async ({
+exports.generateDeltaBotCommentFromDeltaComment = async ({
   comment,
   botUsername,
   reddit,
@@ -56,7 +56,7 @@ export const generateDeltaBotCommentFromDeltaComment = async ({
     text: '',
   }
   const json = await reddit.query(
-      `/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`,
+      `/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`
   )
   if (json.error) throw Error(json.error)
   const parentThing = json[1].data.children[0].data
@@ -71,7 +71,7 @@ export const generateDeltaBotCommentFromDeltaComment = async ({
       ) && bypassOPCheck === false
   ) {
     console.log(
-      `BAILOUT parent author, ${parentThing.author} is listing author, ${listing.author}`,
+      `BAILOUT parent author, ${parentThing.author} is listing author, ${listing.author}`
     )
     const text = i18n[locale].noAward.op
     issues.op = 1
@@ -120,11 +120,11 @@ export const generateDeltaBotCommentFromDeltaComment = async ({
 }
 
 const packageJson = require(path.resolve('./package.json'))
-export const getUserAgent = moduleName => (
+exports.getUserAgent = moduleName => (
   `DB3/v${packageJson.version} ${moduleName ? `- ${moduleName} Module ` : ''}- by MystK`
 )
 
-export const getDeltaBotReply = (botUsername, replies) => {
+exports.getDeltaBotReply = (botUsername, replies) => {
   // legacy Reddit API Driver
   if ('data' in replies) {
     return _.reduce(_.get(replies, 'data.children'), (result, reply) => {
@@ -142,7 +142,7 @@ export const getDeltaBotReply = (botUsername, replies) => {
   }, null)
 }
 
-export const getParsedDate = () => {
+exports.getParsedDate = () => {
   const now = new Date()
   return `As of ${now.getMonth() + 1}/${now.getDate()}/` +
     `${now.getFullYear().toString().slice(2)} ` +
@@ -150,11 +150,11 @@ export const getParsedDate = () => {
     `${now.toString().match(/\(([A-Za-z\s].*)\)/)[1]}`
 }
 
-export const getWikiContent = async ({ api, subreddit, wikiPage }) => {
+exports.getWikiContent = async ({ api, subreddit, wikiPage }) => {
   try {
     const resp = await api.query(`/r/${subreddit}/wiki/${wikiPage}`, true, true)
     const html = resp.match(
-      /<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/,
+      /<textarea readonly class="source" rows="20" cols="20">[^]+<\/textarea>/
     )[0].replace(/<textarea readonly class="source" rows="20" cols="20">|<\/textarea>/g, '')
     return entities.decode(html)
   } catch (err) {
@@ -162,11 +162,11 @@ export const getWikiContent = async ({ api, subreddit, wikiPage }) => {
   }
 }
 
-export const parseHiddenParams = (string) => {
+exports.parseHiddenParams = (string) => {
   try {
     const hiddenSection = string.match(/DB3PARAMSSTART[^]+DB3PARAMSEND/)[0]
     const stringParams = hiddenSection.slice(
-      'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length,
+      'DB3PARAMSSTART'.length, -'DB3PARAMSEND'.length
     ).replace(/&quot;/g, '"').replace(/-paren---/g, ')')
     return JSON.parse(entities.decode(stringParams))
   } catch (error) {
@@ -174,7 +174,7 @@ export const parseHiddenParams = (string) => {
   }
 }
 
-export const stringifyObjectToBeHidden = input => (
+exports.stringifyObjectToBeHidden = input => (
   /* eslint-disable no-irregular-whitespace */
   `[​](HTTP://DB3PARAMSSTART\n${
     JSON.stringify(input, null, 2).replace(/\)/g, '-paren---')
@@ -188,7 +188,7 @@ const truncateAwardedText = (text) => {
   }
   return text
 }
-export const formatAwardedText = (text) => {
+exports.formatAwardedText = (text) => {
   /* eslint-disable no-useless-escape */
   const textWithoutQuotes = entities.decode(text) // html decode the text
     .replace(/>[^]*?\n\n/g, '[Quote] ') // replace quotes

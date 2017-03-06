@@ -1,8 +1,8 @@
-import fsp from 'fs-promise'
-import path from 'path'
-import Snoowrap from 'snoowrap'
-import _ from 'lodash'
-import { getUserAgent } from './../utils'
+const fsp = require('fs-promise')
+const path = require('path')
+const Snoowrap = require('snoowrap')
+const _ = require('lodash')
+const { getUserAgent } = require('./../utils')
 
 class DeltaBotModule {
   constructor(fileName, legacyRedditApi) {
@@ -20,13 +20,13 @@ class DeltaBotModule {
       const moduleCredentialsPath = path.join(
         process.cwd(),
         'config/credentials',
-        `${this.fileName}.json`,
+        `${this.fileName}.json`
       )
       return fsp.readJsonSync(moduleCredentialsPath)
     } catch (expectedError) {
       const defaultCredentialsPath = path.join(
         process.cwd(),
-        'config/credentials/credentials.json',
+        'config/credentials/credentials.json'
       )
       return fsp.readJsonSync(defaultCredentialsPath)
     }
@@ -41,5 +41,4 @@ class DeltaBotModule {
     await this.login()
   }
 }
-
-export default DeltaBotModule
+module.exports = DeltaBotModule
