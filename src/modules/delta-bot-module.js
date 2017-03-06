@@ -14,6 +14,11 @@ class DeltaBotModule {
     this.moduleName = _.startCase(this.fileName)
     this.reddit = 'Not connected yet!'
     this.legacyRedditApi = legacyRedditApi
+    this.statePath = path.join(
+      process.cwd(),
+      'config/state',
+      `${this.fileName}.json`
+    )
   }
   getAndSetCredentials() {
     try {
@@ -30,6 +35,26 @@ class DeltaBotModule {
       )
       return fsp.readJsonSync(defaultCredentialsPath)
     }
+  }
+  get state() {
+    try {
+      if (!this.stateObj) this.stateObj = fsp.readJsonSync(this.statePath)
+    } catch (error) {
+      this.stateObj = {}
+    }
+    return this.stateObj
+  }
+  set state(newState) {
+    return (async () => {
+      const oldState = this.stateObj
+      try {
+        this.stateObj = newState
+        await fsp.writeJson(this.statePath, newState)
+      } catch (error) {
+        this.state = oldState
+        await fsp.writeJson(this.statePath, oldState)
+      }
+    })()
   }
   async login() {
     const credentials = this.getAndSetCredentials()
