@@ -436,7 +436,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     const deltas = {}
 
     // fetch the comments of all threads and analyse if there were deltas given out
-    await Promise.all(threadUrls.map(async (threadUrl) => {
+    for (const threadUrl of threadUrls) {
       const response = await api.query(threadUrl, true)
 
       if (response[1].data.children) {
@@ -479,7 +479,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
 
         checkAllChildren(response[1].data)
       }
-    }))
+    }
 
     return deltas
   }
