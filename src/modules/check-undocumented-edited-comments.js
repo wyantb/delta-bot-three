@@ -79,7 +79,7 @@ class CheckUnseenComments extends DeltaBotModule {
           after: _.get(comments, '[0].name') || commentIdToStartBefore,
         })
         this.state = {
-          lastParsedCommentIDs: [comments[0].name || commentIdToStartBefore].concat(
+          lastParsedCommentIDs: [_.get(comments, '[0].name') || commentIdToStartBefore].concat(
             alreadyParsedComments.map(comment => comment.name)
           ),
         }
