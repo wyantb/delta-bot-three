@@ -61,7 +61,7 @@ const generateDeltaBotCommentFromDeltaComment = async ({
   const parentThing = json[1].data.children[0].data
   const listing = json[0].data.children[0].data
   if (parentThing.author === '[deleted]') return true
-  if (author === botUsername) return true
+  if (author.name || author === botUsername) return true
   hiddenParams.parentUserName = parentThing.author
   if (
       (
