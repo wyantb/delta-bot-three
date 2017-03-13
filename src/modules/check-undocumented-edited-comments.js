@@ -51,7 +51,7 @@ class CheckUnseenComments extends DeltaBotModule {
             .fetch()
           const commentReplies = await commentWithReplies.replies.fetchAll({})
           const dbReply = getDeltaBotReply(this.botUsername, commentReplies)
-          if (!dbReply) verifyThenAward(comment)
+          if (!dbReply) await verifyThenAward(comment)
           else {
             const oldHiddenParems = parseHiddenParams(dbReply.body)
             const oldIssueCount = Object.keys(oldHiddenParems.issues).length
@@ -67,7 +67,7 @@ class CheckUnseenComments extends DeltaBotModule {
               await this.reddit
                 .getComment(dbReply.id)
                 .delete()
-              verifyThenAward(comment)
+              await verifyThenAward(comment)
             }
           }
         }
