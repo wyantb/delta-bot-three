@@ -1,14 +1,13 @@
 const path = require('path')
 const _ = require('lodash')
-
+const moment = require('moment')
 const { AllHtmlEntities: entities } = require('html-entities')
 
+const escapeUnderscore = string => string.replace(/_/g, '\\_')
 
-exports.escapeUnderscore = string => string.replace(/_/g, '\\_')
+const getCommentAuthor = comment => _.get(comment, 'author.name') || _.get(comment, 'author')
 
-exports.getCommentAuthor = comment => _.get(comment, 'author.name') || _.get(comment, 'author')
-
-exports.checkCommentForDelta = (comment) => {
+const checkCommentForDelta = (comment) => {
   const { body_html } = comment
   // this removes the text that are in quotes
   const removedBodyHTML = (
@@ -32,7 +31,7 @@ const locale = 'en-us'
 const isDebug = _.some(process.argv, arg => arg === '--db3-debug')
 const i18n = require(path.resolve('i18n'))
 const bypassOPCheck = _.some(process.argv, arg => arg === '--bypass-op-check')
-exports.generateDeltaBotCommentFromDeltaComment = async ({
+const generateDeltaBotCommentFromDeltaComment = async ({
   comment,
   botUsername,
   reddit,
@@ -120,11 +119,11 @@ exports.generateDeltaBotCommentFromDeltaComment = async ({
 }
 
 const packageJson = require(path.resolve('./package.json'))
-exports.getUserAgent = moduleName => (
+const getUserAgent = moduleName => (
   `DB3/v${packageJson.version} ${moduleName ? `- ${moduleName} Module ` : ''}- by MystK`
 )
 
-exports.getDeltaBotReply = (botUsername, replies) => {
+const getDeltaBotReply = (botUsername, replies) => {
   // legacy Reddit API Driver
   if ('data' in replies) {
     return _.reduce(_.get(replies, 'data.children'), (result, reply) => {
@@ -142,7 +141,7 @@ exports.getDeltaBotReply = (botUsername, replies) => {
   }, null)
 }
 
-exports.getParsedDate = () => {
+const getParsedDate = () => {
   const now = new Date()
   return `As of ${now.getMonth() + 1}/${now.getDate()}/` +
     `${now.getFullYear().toString().slice(2)} ` +
@@ -150,7 +149,7 @@ exports.getParsedDate = () => {
     `${now.toString().match(/\(([A-Za-z\s].*)\)/)[1]}`
 }
 
-exports.getWikiContent = async ({ api, subreddit, wikiPage }) => {
+const getWikiContent = async ({ api, subreddit, wikiPage }) => {
   try {
     const resp = await api.query(`/r/${subreddit}/wiki/${wikiPage}`, true, true)
     const html = resp.match(
@@ -162,7 +161,7 @@ exports.getWikiContent = async ({ api, subreddit, wikiPage }) => {
   }
 }
 
-exports.parseHiddenParams = (string) => {
+const parseHiddenParams = (string) => {
   try {
     const hiddenSection = string.match(/DB3PARAMSSTART[^]+DB3PARAMSEND/)[0]
     const stringParams = hiddenSection.slice(
@@ -174,7 +173,7 @@ exports.parseHiddenParams = (string) => {
   }
 }
 
-exports.stringifyObjectToBeHidden = input => (
+const stringifyObjectToBeHidden = input => (
   /* eslint-disable no-irregular-whitespace */
   `[​](HTTP://DB3PARAMSSTART\n${
     JSON.stringify(input, null, 2).replace(/\)/g, '-paren---')
@@ -188,7 +187,7 @@ const truncateAwardedText = (text) => {
   }
   return text
 }
-exports.formatAwardedText = (text) => {
+const formatAwardedText = (text) => {
   /* eslint-disable no-useless-escape */
   const textWithoutQuotes = entities.decode(text) // html decode the text
     .replace(/>[^]*?\n\n/g, '[Quote] ') // replace quotes
@@ -196,4 +195,64 @@ exports.formatAwardedText = (text) => {
     .replace(/\[([^\]]+?)\]\([^)]+?\)/g, '$1') // links like `[foo](URL)` -> just `foo` in log line
   /* eslint-enable no-useless-escape */
   return truncateAwardedText(textWithoutQuotes)
+}
+
+const checkIfValidCommentId = async ({ commentId, subredditDriver }) => (
+  (await subredditDriver.getNewComments({ after: commentId, limit: 1 })).length >= 1
+)
+
+const getLastValidCommentId = async ({ lastParsedCommentIDs, subredditDriver }) => {
+  const clonedLastParsedCommentIDs = _.clone(lastParsedCommentIDs)
+  let lastValidCommentId
+  let isValidCommentId
+  do {
+    lastValidCommentId = clonedLastParsedCommentIDs.shift()
+    isValidCommentId = await checkIfValidCommentId({
+      commentId: lastValidCommentId,
+      subredditDriver,
+    })
+  } while (!isValidCommentId)
+  return lastValidCommentId
+}
+
+const getNewCommentsBeforeCommentId = async ({
+  atLeastMinutesOld = 0,
+  commentId,
+  subredditDriver,
+}) => {
+  const commentsToReturn = []
+  let commentIdToUse
+  let continuousComments
+  let continueOn = true
+  while (continueOn) {
+    console.log(`In loop for ${commentId}`)
+    commentIdToUse = _.get(continuousComments, '[0].name') || commentId
+    continuousComments = await subredditDriver.getNewComments({ before: commentIdToUse })
+    if (continuousComments.length) {
+      _.forEachRight(continuousComments, (comment) => {
+        const { created_utc: createdUtc } = comment
+        if (moment().diff(createdUtc * 1000, 'minutes') >= atLeastMinutesOld) {
+          commentsToReturn.push(comment)
+        } else continueOn = false
+      })
+    } else continueOn = false
+  }
+  return commentsToReturn
+}
+
+module.exports = {
+  escapeUnderscore,
+  getCommentAuthor,
+  checkCommentForDelta,
+  generateDeltaBotCommentFromDeltaComment,
+  getUserAgent,
+  getDeltaBotReply,
+  getParsedDate,
+  getWikiContent,
+  parseHiddenParams,
+  stringifyObjectToBeHidden,
+  formatAwardedText,
+  checkIfValidCommentId,
+  getLastValidCommentId,
+  getNewCommentsBeforeCommentId,
 }

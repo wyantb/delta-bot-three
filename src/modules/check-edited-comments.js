@@ -13,11 +13,11 @@ class CheckEditedComments extends DeltaBotModule {
   constructor(legacyRedditApi) {
     super(__filename, legacyRedditApi)
   }
-  async start() {
-    super.start()
-    this.scanForEditedComments()
+  async bootstrap() {
+    super.bootstrap()
+    this.startCron()
   }
-  async scanForEditedComments() {
+  async startCron() {
     const editedComments = await this.reddit
       .getSubreddit(this.subreddit)
       .getEdited({ only: 'comments' })
@@ -52,7 +52,7 @@ class CheckEditedComments extends DeltaBotModule {
     }
     // set the timeout here in case it takes long or hangs,
     // so it doesn't fire off multiple time at once
-    setTimeout(() => this.scanForEditedComments(), 60000)
+    setTimeout(() => this.startCron(), 60000)
   }
 }
 

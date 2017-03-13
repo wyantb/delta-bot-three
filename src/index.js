@@ -16,7 +16,6 @@ const path = require('path')
 // const bodyParser = require('koa-bodyparser')
 const Reddit = require('./reddit-api-driver')
 const DeltaBoards = require('./delta-boards')
-const Modules = require('./modules')
 const {
   checkCommentForDelta,
   generateDeltaBotCommentFromDeltaComment,
@@ -972,12 +971,13 @@ const entry = async () => {
   try {
     await reddit.connect()
     console.log('Start loading modules!'.bgGreen.cyan)
+    const Modules = require('./modules')
     await _.reduce(Modules, async (result, Module, name) => {
       try {
         console.log(`Trying to load ${name} module!`.bgCyan)
         const module = new Module(reddit)
         result[name] = module
-        await module.start()
+        await module.bootstrap()
       } catch (err) {
         console.error(`${err.stack}`.bgRed)
       }

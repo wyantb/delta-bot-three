@@ -5,7 +5,7 @@ const _ = require('lodash')
 const { getUserAgent } = require('./../utils')
 
 class DeltaBotModule {
-  constructor(fileName, legacyRedditApi) {
+  constructor(fileName, legacyRedditApi, stateSchema) {
     const configPath = path.join(process.cwd(), 'config/config.json')
     this.config = fsp.readJsonSync(configPath)
     this.botUserName = 'Not set yet!'
@@ -13,12 +13,14 @@ class DeltaBotModule {
     this.fileName = fileName.replace(__dirname, '').slice(1).slice(0, -3)
     this.moduleName = _.startCase(this.fileName)
     this.reddit = 'Not connected yet!'
+    this.subredditDriver = 'Not connected yet!'
     this.legacyRedditApi = legacyRedditApi
     this.statePath = path.join(
       process.cwd(),
       'config/state',
-      `${this.fileName}.json`
+      `${this.fileName}-state.json`
     )
+    this.stateSchema = stateSchema
   }
   getAndSetCredentials() {
     try {
@@ -39,8 +41,24 @@ class DeltaBotModule {
   get state() {
     try {
       if (!this.stateObj) this.stateObj = fsp.readJsonSync(this.statePath)
-    } catch (error) {
-      this.stateObj = {}
+      if (this.stateSchema) {
+        Object.keys(this.stateSchema).forEach((key) => {
+          if (!(key in this.stateObj)) {
+            throw Error(`${key} not found in state object. Resetting to default. ${this.stateObj}`)
+          }
+          if (typeof this.stateSchema[key] !== typeof this.stateObj[key]) {
+            throw Error(
+              `Type of ${key} in state object is not correct. ` +
+              `Should be type, ${typeof this.stateSchema[key]}, but ` +
+              `it is type, ${this.stateObj[key]}. Resetting to default. ${this.stateObj}`
+            )
+          }
+        })
+      }
+    } catch (err) {
+      console.log(err)
+      this.stateObj = this.stateSchema || {}
+      fsp.writeJsonSync(this.statePath, this.stateObj)
     }
     return this.stateObj
   }
@@ -61,8 +79,14 @@ class DeltaBotModule {
     this.botUsername = credentials.username
     const userAgent = getUserAgent(this.moduleName)
     this.reddit = new Snoowrap(_.assign(credentials, { userAgent }))
+    this.reddit.config({
+      requestDelay: 1000,
+      continueAfterRatelimitError: true,
+      maxRetryAttempts: 5,
+    })
+    this.subredditDriver = await this.reddit.getSubreddit(this.subreddit)
   }
-  async start() {
+  async bootstrap() {
     await this.login()
   }
 }
