@@ -124,6 +124,8 @@ const getUserAgent = moduleName => (
 )
 
 const getDeltaBotReply = (botUsername, replies) => {
+  if (!replies) return false
+
   // legacy Reddit API Driver
   if ('data' in replies) {
     return _.reduce(_.get(replies, 'data.children'), (result, reply) => {
