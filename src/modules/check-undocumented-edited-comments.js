@@ -26,6 +26,14 @@ class CheckUnseenComments extends DeltaBotModule {
       const { subredditDriver } = this
 
       const { lastParsedCommentIDs } = this.state
+
+      // if there isn't a state, bootstrap it
+      if (!lastParsedCommentIDs.length) {
+        const comments = await subredditDriver.getNewComments()
+        this.state = {
+          lastParsedCommentIDs: comments.map(comment => comment.name),
+        }
+      }
       const commentIdToStartBefore = await getLastValidCommentId({
         lastParsedCommentIDs,
         subredditDriver,
@@ -70,7 +78,6 @@ class CheckUnseenComments extends DeltaBotModule {
         const alreadyParsedComments = await subredditDriver.getNewComments({
           after: _.get(comments, '[0].name') || commentIdToStartBefore,
         })
-        console.log(alreadyParsedComments.length)
         this.state = {
           lastParsedCommentIDs: [comments[0].name || commentIdToStartBefore].concat(
             alreadyParsedComments.map(comment => comment.name)
