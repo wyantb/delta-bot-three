@@ -49,7 +49,7 @@ _Please add yourself to this list if you've contributed:_
 
 ### To-Do
 - [x] Make DeltaBot automatically rescan edited comments [#4](https://github.com/MystK/delta-bot-three/issues/4).
-- [ ] Act on edits made within 3 minutes of commenting [#139](https://github.com/MystK/delta-bot-three/issues/139).
+- [x] Act on edits made within 3 minutes of commenting [#139](https://github.com/MystK/delta-bot-three/issues/139).
 - [ ] Solve the missing deltas issue [#119](https://github.com/MystK/delta-bot-three/issues/119).
 - [x] Implement first-time-delta PMs [#14](https://github.com/MystK/delta-bot-three/issues/14).
 - [x] Yearly Deltaboard [#36](https://github.com/MystK/delta-bot-three/issues/36).
