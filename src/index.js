@@ -26,6 +26,7 @@ const {
   parseHiddenParams,
   stringifyObjectToBeHidden,
   formatAwardedText,
+  parseCommentIdFromURL,
 } = require('./utils')
 const upgradeConfig = require('./upgrade-config')
 
@@ -472,16 +473,41 @@ const logOpComments = (comments, postBase) => {
   }, postBase)
 }
 
+const mergeAwardingUsers = (userLinks) => {
+  const initialUsers = _.dropRight(userLinks, 2)
+  const finalUsers = _.takeRight(userLinks, 2)
+  return initialUsers.concat(finalUsers.join(i18n[locale].andWithSpace)).join(', ')
+}
+
 /* Replaces the "From Other Users" section contents with appropriate comment links */
 const deltaLogOtherEntryTemplate = _.template(i18n[locale].deltaLogOtherEntry)
-const logOtherComments = (comments, postBase) => {
+const deltaLogMultipleOthersTemplate = _.template(i18n[locale].deltaLogMultipleOthers)
+const logOtherComments = (ungroupedComments, postBase) => {
   const REPLACE_SECTION = '[](HTTP://DB3-FROMOTHER)'
-  if (_.isEmpty(comments)) {
+  if (_.isEmpty(ungroupedComments)) {
     return postBase.replace(REPLACE_SECTION, i18n[locale].deltaLogNoneYet)
   }
-  return _.reduce(comments, (postSoFar, comment) => {
-    const commentString = deltaLogOtherEntryTemplate(comment)
-    return postSoFar.replace(REPLACE_SECTION, `${commentString}\n${REPLACE_SECTION}`)
+  const commentsGroupedById = _.groupBy(ungroupedComments,
+    comment => parseCommentIdFromURL(comment.awardedLink)
+  )
+  return _.reduce(commentsGroupedById, (postSoFar, comments) => {
+    if (comments.length === 1) {
+      const comment = _.first(comments)
+      const commentString = deltaLogOtherEntryTemplate(comment)
+      return postSoFar.replace(REPLACE_SECTION, `${commentString}\n${REPLACE_SECTION}`)
+    }
+
+    const count = comments.length
+    const users = mergeAwardingUsers(_.map(comments, comment => `/u/${comment.awardingUsername}`))
+    const firstComment = _.first(comments)
+    const commentsString = deltaLogMultipleOthersTemplate({
+      count,
+      users,
+      awardedUsername: firstComment.awardedUsername,
+      awardedText: firstComment.awardedText,
+      awardedLink: firstComment.awardedLink,
+    })
+    return postSoFar.replace(REPLACE_SECTION, `${commentsString}\n${REPLACE_SECTION}`)
   }, postBase)
 }
 

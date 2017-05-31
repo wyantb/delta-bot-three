@@ -242,6 +242,12 @@ const getNewCommentsBeforeCommentId = async ({
   return commentsToReturn
 }
 
+const parseCommentIdFromURL = (url) => {
+  const parts = url.split('/')
+  const idPart = _.last(parts)
+  return idPart
+}
+
 module.exports = {
   escapeUnderscore,
   getCommentAuthor,
@@ -257,4 +263,5 @@ module.exports = {
   checkIfValidCommentId,
   getLastValidCommentId,
   getNewCommentsBeforeCommentId,
+  parseCommentIdFromURL,
 }
