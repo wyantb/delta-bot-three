@@ -1,5 +1,6 @@
 {
   "en-us": {
+    "andWithSpace": " and ",
     "awardDelta": "Confirmed: 1 delta awarded to /u/USERNAME ([DELTAS∆](/r/SUBREDDIT/wiki/user/USERNAME)).",
     "noAward": {
       "littleText": "The length of your comment suggests that you haven't properly explained how /u/PARENTUSERNAME changed your view (comment rule 4).\n\nDeltaBot is able to rescan edited comments. Please edit your comment with the required explanation.",
@@ -18,6 +19,7 @@
     "deltaLogSticky": "/u/<%= username %> (OP) has awarded <%= opawarded %> in this post.\n\nAll comments that earned deltas (from OP or other users) are listed [**here**](<%= linkToPost %>), in /r/<%= deltaLogSubreddit %>.\n\nPlease note that a change of view [doesn't necessarily mean a reversal](https://www.reddit.com/r/changemyview/wiki/index#wiki_what_is_a_.27view.27.3F), or that the conversation has ended.\n\n^[Delta System Explained](https://www.reddit.com/r/changemyview/wiki/deltasystem) ^| ^[Deltaboards](https://www.reddit.com/r/changemyview/wiki/deltaboards)",
     "deltaLogOPEntry": "* 1 delta from OP to /u/<%= awardedUsername %> for \"[<%= awardedText %>](<%= awardedLink %>/?context=1)\"\n",
     "deltaLogOtherEntry": "* 1 delta from /u/<%= awardingUsername %> to /u/<%= awardedUsername %> for \"[<%= awardedText %>](<%= awardedLink %>/?context=1)\"\n",
+    "deltaLogMultipleOthers": "* <%= count %> deltas from <%= users %> to /u/<%= awardedUsername %> for \"[<%= awardedText %>](<%= awardedLink %>/?context=1)\"\n",
     "deltaLogNoneYet": "* None yet."
   }
 }

@@ -35,6 +35,14 @@ describe('utilities', () => {
     expect(checkCommentForDelta(createMockCommentClass(
         'pre&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/pre&gt;'))).toBe(false)
   })
+
+  it('should be able to identify comment id from URL', () => {
+    const { parseCommentIdFromURL } = component
+    const url1 = 'https://www.reddit.com/r/db3_wyantb/comments/5ls1vf/deltacomments_in_cmv_can_we_get_a_stick_comment/di7f3wr'
+    const url2 = 'https://www.reddit.com/r/db3_wyantb/comments/5ls1vf/deltacomments_in_cmv_can_we_get_a_stick_comment/second'
+    expect(parseCommentIdFromURL(url1)).toBe('di7f3wr')
+    expect(parseCommentIdFromURL(url2)).toBe('second')
+  })
 })
 
 const paulRyanCMVPost = 'How about Paul Ryan\'s [anti-poverty plan](http://www.speaker.gov/press-release/republicans-unveil-better-way-fight-poverty)?  His goals and justifications there seem to be focused on measurable impact on quality of life (\"opportunities to succeed\", \"tailor benefits to people\'s needs\", \"way out of poverty\", \"help you stay on the path from dependence to independence\").\n\nHe wants to improve lives; whether his plan is the plan most likely to succeed is a different question, but that\'s clearly his motivation.\n\nOr look at his plan to [replace Obamacare:](http://www.speaker.gov/press-release/obamacare-failing-speaker-ryan-s-remarks-leadership-press-conference) “For people seeing their premiums skyrocket, Obamacare has already failed. For people suddenly stuck with only one plan to choose from—a monopoly—this law has failed them. For people with deductibles so high that they try to get by without going to the doctor, this law has failed them.  \n\n“There is a better way, and we have made it clear what we want to replace Obamacare with: a truly patient-centered system with more choices and lower costs. A system that gives you the control and the freedom that Obamacare has taken from you.\"\n\nThat\'s all about quality of life.  Again, he might be wrong or right on the details, but the plan is to improve quality of life.'
