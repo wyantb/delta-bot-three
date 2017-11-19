@@ -765,8 +765,9 @@ exports.verifyThenAward = async (comment) => {
     await makeComment({ content: query, sticky: false })
     if (issueCount === 0 && deltaLogEnabled) {
       const deltaLogPost = await findOrMakeDeltaLogPost(linkID, comment, parentThing)
-      const stickiedComment = await findOrMakeStickiedComment(linkID, comment, deltaLogPost)
-      await updateDeltaLogWikiLinks(linkID, comment, deltaLogPost.wikientry, stickiedComment)
+      await updateDeltaLogWikiLinks()
+      await findOrMakeStickiedComment(linkID, comment, deltaLogPost)
+      await updateDeltaLogWikiLinks()
     }
   } catch (err) {
     console.log(err)
