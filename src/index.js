@@ -464,7 +464,7 @@ const wasDeltaMadeByAuthor = comment => comment.link_author === getCommentAuthor
 /* Invoked after the DeltaLog post is made, so `deltaLogKnownPosts` will be populated */
 const deltaLogStickyTemplate = _.template(i18n[locale].deltaLogSticky)
 const findOrMakeStickiedComment = async (linkID, comment, deltaLogPost) => {
-  const stickyID = deltaLogPost.wikientry.stickiedCommentID
+  let stickyID = deltaLogPost.wikientry.stickiedCommentID
   const opName = deltaLogPost.postentry.opUsername
   const deltasAwardedByOP = deltaLogPost.postentry.comments.filter(
     comm => comm.awardingUsername === opName
@@ -473,6 +473,15 @@ const findOrMakeStickiedComment = async (linkID, comment, deltaLogPost) => {
 
   if (!wasDeltaMadeByAuthor(comment)) {
     return true
+  }
+  if (!stickyID) {
+    const postComments = await reddit.query(`/r/${subreddit}/comments/${linkID}.json`, true)
+    const toplevelReplies = _.get(postComments, '[1].data.children')
+    _.each(toplevelReplies, (topLevelComment) => {
+      if (topLevelComment.author === botUsername && topLevelComment.stickied) {
+        stickyID = comment.name
+      }
+    })
   }
   if (stickyID) {
     // Update the N in 'OP has awarded N deltas...'
