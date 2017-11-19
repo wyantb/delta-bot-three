@@ -471,6 +471,9 @@ const findOrMakeStickiedComment = async (linkID, comment, deltaLogPost) => {
   ).length
   const awardStr = deltasAwardedByOP + ((deltasAwardedByOP === 1) ? ' delta' : ' deltas')
 
+  if (!wasDeltaMadeByAuthor(comment)) {
+    return true
+  }
   if (stickyID) {
     // Update the N in 'OP has awarded N deltas...'
     const stickyCommentBody = deltaLogStickyTemplate({
@@ -492,9 +495,6 @@ const findOrMakeStickiedComment = async (linkID, comment, deltaLogPost) => {
     })
     if (updateResponse.error) { console.error(updateResponse.error) }
 
-    return true
-  }
-  if (!wasDeltaMadeByAuthor(comment)) {
     return true
   }
   const stickiedCommentID = await makeComment({
