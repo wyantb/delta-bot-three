@@ -112,7 +112,8 @@ class DeltaBoards {
 
     // set the timeout here in case it takes long or hangs,
     // so it doesn't fire off multiple time at once
-    setTimeout(() => this.updateDailyWeeklyMonthlyDeltaboards(), 60000)
+    // run again in 1 hour
+    setTimeout(() => this.updateDailyWeeklyMonthlyDeltaboards(), 1000 * 60 * 60)
   }
 
   mapDeltaboardDataToTable(data) {
@@ -401,7 +402,7 @@ ${this.mapDeltaboardDataToTable(newHiddenParams.monthly)}
     const newHiddenParams = await this.generateNewHiddenParamsWithYearly(yearly)
     await this.renderDeltaboardsWiki(newHiddenParams)
 
-    setTimeout(() => this.updateYearlyDeltaboard(), 3 * 3600 * 1000) // run again in 3 hours
+    setTimeout(() => this.updateYearlyDeltaboard(), 1000 * 60 * 60 * 3) // run again in 3 hours
   }
 
   async getPeriodTopTen(year, month = null) {
