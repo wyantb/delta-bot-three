@@ -71,8 +71,8 @@ Must be one of the following:
 1. Get a Reddit API key by going to https://www.reddit.com/prefs/apps/ => create another app => https://i.imgur.com/xMUa521.png. The bot account be a developer of the app.
 1. Create a `credentials.json` that looks like below in `./config/credentials` folder.
 1. Create a `config.json` that looks like below in `./config` folder.
-1. `npm install -g yarn` && `yarn`
-1. Run `yarn run start-debug` or `yarn start` and it should work.
+1. `npm i`
+1. Run `npm run start-debug` or `npm start` and it should work.
 
 #### credentials.json (example)
 ````
