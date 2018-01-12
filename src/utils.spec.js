@@ -31,9 +31,9 @@ describe('utilities', () => {
     expect(checkCommentForDelta(createMockCommentClass('&#8710;'))).toBe(true)
     expect(checkCommentForDelta(createMockCommentClass('&amp;#8710;'))).toBe(true)
     expect(checkCommentForDelta(createMockCommentClass(
-        'blockquote&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/blockquote&gt;'))).toBe(false)
+      'blockquote&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/blockquote&gt;'))).toBe(false)
     expect(checkCommentForDelta(createMockCommentClass(
-        'pre&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/pre&gt;'))).toBe(false)
+      'pre&gt;&amp;#8710;&#8710;∆Δ!delta!dElTa/pre&gt;'))).toBe(false)
   })
 
   it('should be able to identify comment id from URL', () => {

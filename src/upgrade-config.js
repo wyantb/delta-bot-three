@@ -52,10 +52,10 @@ module.exports = async () => {
   // throw an error and exit
   const configJsonPath = path.join(process.cwd(), 'config/config.json')
   if (
-      credentialsJson &&
+    credentialsJson &&
       'subreddit' in credentialsJson &&
       'deltaLogSubreddit' in credentialsJson
-    ) {
+  ) {
     await fs.writeFile(configJsonPath, JSON.stringify({
       subreddit: credentialsJson.subreddit,
       deltaLogSubreddit: credentialsJson.deltaLogSubreddit,

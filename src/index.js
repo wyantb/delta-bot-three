@@ -82,9 +82,9 @@ const {
       while (!response.data.children.length && lastParsedCommentIDs.length) {
         lastParsedCommentID = lastParsedCommentIDs.shift()
         query = { after: lastParsedCommentID }
-      /* eslint-disable no-await-in-loop */
+        /* eslint-disable no-await-in-loop */
         response = await reddit.query(`/r/${subreddit}/comments.json?${stringify(query)}`, true)
-      /* eslint-enable no-await-in-loop */
+        /* eslint-enable no-await-in-loop */
         if (response.error) throw Error(response.error)
       }
       lastParsedCommentIDs = []
@@ -93,8 +93,8 @@ const {
         lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
       }
       await fs.writeFile(
-      './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
-    )
+        './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
+      )
       if (lastParsedCommentIDs.length === 0) {
         lastParsedCommentID = null
         await fs.writeFile('./config/state/state.json', '{}')
@@ -105,8 +105,8 @@ const {
           lastParsedCommentIDs.push(_.get(stateResponse, ['data', 'children', i, 'data', 'name']))
         }
         await fs.writeFile(
-        './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
-      )
+          './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
+        )
         lastParsedCommentID = lastParsedCommentIDs[0]
       }
     }
@@ -126,8 +126,8 @@ const {
         lastParsedCommentIDs.push(_.get(response, ['data', 'children', i, 'data', 'name']))
       }
       await fs.writeFile(
-      './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
-    )
+        './config/state/state.json', JSON.stringify({ lastParsedCommentIDs }, null, 2)
+      )
     }
     switch (true) {
       case (commentEntriesLength === 25):
@@ -142,15 +142,15 @@ const {
   }
 
   const addOrRemoveDeltaToOrFromWiki = async ({
-  createdUTC,
-  user,
-  linkTitle,
-  id,
-  linkURL,
-  author,
-  action,
-  mode,
-}) => { // returns flair count
+    createdUTC,
+    user,
+    linkTitle,
+    id,
+    linkURL,
+    author,
+    action,
+    mode,
+  }) => { // returns flair count
     const createWikiHiddenParams = async (content, paramMode) => {
       try {
         const hiddenParams = {
@@ -162,21 +162,21 @@ const {
           const contextNumber = paramMode === 'receive' ? '2' : '3' // 2=Receive, 3=Give
           const links = _.uniq(
             content.match(new RegExp(`/r/${subreddit}/comments/.+?context=${contextNumber}`, 'g'))
-        )
+          )
           const arrayFullnames = (
-          _(links)
-            .reduce((a, e, i) => {
-              const arrayIndex = Math.floor(i / 100)
-              a[arrayIndex] = a[arrayIndex] || []
-              a[arrayIndex].push(
+            _(links)
+              .reduce((a, e, i) => {
+                const arrayIndex = Math.floor(i / 100)
+                a[arrayIndex] = a[arrayIndex] || []
+                a[arrayIndex].push(
                   `t1_${e.replace(
-                      e.slice(0, e.lastIndexOf('/') + 1), ''
+                    e.slice(0, e.lastIndexOf('/') + 1), ''
                   ).replace(`?context=${contextNumber}`, '')}`
-              )
-              return a
-            }, [])
-            .map(e => e.join(','))
-        )
+                )
+                return a
+              }, [])
+              .map(e => e.join(','))
+          )
           if (arrayFullnames.length === 0) {
             return hiddenParams
           }
@@ -185,7 +185,7 @@ const {
               try {
                 const commentRes = await reddit.query(
                   `/r/${subreddit}/api/info?${stringify({ id: fullnames })}`
-              )
+                )
                 if (commentRes.error) throw Error(commentRes.error)
                 const comments = _.get(commentRes, 'data.children')
                 const fullLinkIds = _.reduce(comments, (array, comment) => {
@@ -195,7 +195,7 @@ const {
                 }, []).join(',')
                 const listingsRes = await reddit.query(
                   `/r/${subreddit}/api/info?${stringify({ id: fullLinkIds })}`
-              )
+                )
                 const listingsData = _.get(listingsRes, 'data.children')
                 const titles = _.reduce(listingsData, (array, listing) => {
                   const title = _.get(listing, 'data.title').replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
@@ -204,17 +204,17 @@ const {
                 }, [])
                 const baseUrls = _.reduce(listingsData, (array, listing) => {
                   const title = (
-                  _.get(listing, 'data.permalink')
-                    .replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
-                )
+                    _.get(listing, 'data.permalink')
+                      .replace(/\)/g, 'AXDK9vhFALCkjXPmwvSB')
+                  )
                   array.push(title)
                   return array
                 }, [])
                 _.forEach(comments, (comment, i) => {
                   const name = (
-                  _.get(comment, 'data.name')
-                    .replace('t1_', '') // this is the comment id
-                )
+                    _.get(comment, 'data.name')
+                      .replace('t1_', '') // this is the comment id
+                  )
                   const base = baseUrls[i]
                   const title = titles[i]
                   const awardedBy = _.get(comment, 'data.author')
@@ -334,10 +334,10 @@ const {
       const date = new Date(uu * 1000)
       const [month, day, year] = [date.getMonth() + 1, date.getDate(), date.getFullYear()]
       const newRow = (
-          `|${month}/${day}/${year}|[${t.replace(
-              /AXDK9vhFALCkjXPmwvSB/g, ')'
-          )}](${b})|[Link](${b}${dc}?context=2)|/u/${ab}|\r\n`
-    )
+        `|${month}/${day}/${year}|[${t.replace(
+          /AXDK9vhFALCkjXPmwvSB/g, ')'
+        )}](${b})|[Link](${b}${dc}?context=2)|/u/${ab}|\r\n`
+      )
       newContent += newRow
     })
     newContent += `\r\n\r\n##Deltas Given\r\n\r\n/u/${userToModify} has given ${deltaCountGiven} delta${deltaCountGiven === 1 ? '' : 's'}:\r\n\r\n| Date | Submission | Delta Comment | Awarded To |\r\n| :------: | :------: | :------: | :------: |\r\n`
@@ -346,10 +346,10 @@ const {
       const date = new Date(uu * 1000)
       const [month, day, year] = [date.getMonth() + 1, date.getDate(), date.getFullYear()]
       const newRow = (
-          `|${month}/${day}/${year}|[${t.replace(
-              /AXDK9vhFALCkjXPmwvSB/g, ')'
-          )}](${b})|[Link](${b}${dc}?context=3)|/u/${ab}|\r\n`
-    )
+        `|${month}/${day}/${year}|[${t.replace(
+          /AXDK9vhFALCkjXPmwvSB/g, ')'
+        )}](${b})|[Link](${b}${dc}?context=3)|/u/${ab}|\r\n`
+      )
       newContent += newRow
     })
     const wikiEditReason = mode === 'receive' ? 'Added a delta received' : 'Added a delta given'
@@ -360,7 +360,7 @@ const {
     }
     const response = await reddit.query(
       { URL: `/r/${subreddit}/api/wiki/edit`, method: 'POST', body: stringify(query) }
-  )
+    )
     if (response.error) throw Error(response.error)
     return deltaCountReceived
   }
@@ -371,8 +371,8 @@ const {
       text: `${flairCount}∆`,
     }
     const response = await reddit.query(
-    { URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' }
-  )
+      { URL: `/r/${subreddit}/api/flair?${stringify(flairQuery)}`, method: 'POST' }
+    )
     if (response.error) throw Error(response.error)
     return true
   }
@@ -386,8 +386,8 @@ const {
         text: introductoryTemplate({ username, subreddit }),
       }
       const response = await reddit.query(
-      { URL: `/r/${subreddit}/api/compose?${stringify(introMessageContent)}`, method: 'POST' }
-    )
+        { URL: `/r/${subreddit}/api/compose?${stringify(introMessageContent)}`, method: 'POST' }
+      )
       if (response.error) throw Error(response.error)
     }
     return true
@@ -438,8 +438,8 @@ const {
     const stickyID = deltaLogPost.wikientry.stickiedCommentID
     const opName = deltaLogPost.postentry.opUsername
     const deltasAwardedByOP = deltaLogPost.postentry.comments.filter(
-    comm => comm.awardingUsername === opName
-  ).length
+      comm => comm.awardingUsername === opName
+    ).length
     const awardStr = deltasAwardedByOP + ((deltasAwardedByOP === 1) ? ' delta' : ' deltas')
 
     if (stickyID) {
@@ -532,8 +532,8 @@ const {
       return postBase.replace(REPLACE_SECTION, i18n[locale].deltaLogNoneYet)
     }
     const commentsGroupedById = _.groupBy(ungroupedComments,
-    comment => parseCommentIdFromURL(comment.awardedLink)
-  )
+      comment => parseCommentIdFromURL(comment.awardedLink)
+    )
     return _.reduce(commentsGroupedById, (postSoFar, comments) => {
       if (comments.length === 1) {
         const comment = _.first(comments)
@@ -556,8 +556,8 @@ const {
   }
 
   const groupCommentsByOp = hiddenParams => _.partition(
-  hiddenParams.comments, { awardingUsername: hiddenParams.opUsername }
-)
+    hiddenParams.comments, { awardingUsername: hiddenParams.opUsername }
+  )
 
   /* Given a JSON object like the hidden param on deltalog pages, produces the output page */
   const deltaLogContentTemplate = _.template(i18n[locale].deltaLogContent)
@@ -569,9 +569,9 @@ const {
     })
     const [commentsByOP, commentsByOther] = groupCommentsByOp(deltaLogCreationParams)
     const deltaLogContent = logOpComments(
-    commentsByOP,
-    logOtherComments(commentsByOther, deltaLogBaseContent)
-  )
+      commentsByOP,
+      logOtherComments(commentsByOther, deltaLogBaseContent)
+    )
     return `${deltaLogContent}\n${stringifyObjectToBeHidden(deltaLogCreationParams)}`
   }
 
@@ -618,7 +618,7 @@ const {
     // otherwise, create it & add the delta details to appropriate section
     const deltaLogSubject = deltaLogSubjectTemplate(
       { title: unesc(comment.link_title) }
-  )
+    )
     const deltaLogCreationParams = {
       opUsername: comment.link_author,
       linkToPost: comment.link_url,
@@ -648,7 +648,9 @@ const {
     return { wikientry: wikiPostObject, postentry: deltaLogCreationParams }
   }
 
-/* Updates the delta log hidden contents with known CMV posts -> DeltaLog posts & sticky comments */
+  /**
+   * Updates the delta log hidden contents with known CMV posts -> DeltaLog posts & sticky comments
+   */
   const updateDeltaLogWikiLinks = async () => {
     const postParams = {
       content: stringifyObjectToBeHidden(deltaLogKnownPosts),
@@ -666,12 +668,12 @@ const {
 
   exports.verifyThenAward = async (comment) => {
     const {
-    created_utc: createdUTC,
-    link_id: linkID,
-    link_title: linkTitle,
-    link_url: linkURL,
-    id,
-  } = comment
+      created_utc: createdUTC,
+      link_id: linkID,
+      link_title: linkTitle,
+      link_url: linkURL,
+      id,
+    } = comment
 
     // check if DeltaBot has already replied to this comment
     const commentURL = `${linkURL}${id}.json`.replace('https://www.reddit.com', '')
@@ -688,11 +690,11 @@ const {
 
     try {
       const {
-      issueCount,
-      parentThing,
-      query,
-      hiddenParams,
-    } = await generateDeltaBotCommentFromDeltaComment({ comment, botUsername, reddit, subreddit })
+        issueCount,
+        parentThing,
+        query,
+        hiddenParams,
+      } = await generateDeltaBotCommentFromDeltaComment({ comment, botUsername, reddit, subreddit })
       if (!query) return true
       if (issueCount === 0) {
         console.log('THIS ONE IS GOOD. AWARD IT')
@@ -708,7 +710,7 @@ const {
             action: 'add',
             mode: 'receive',
           }
-      )
+        )
         // Modify wiki for the user giving the delta
         await addOrRemoveDeltaToOrFromWiki(
           {
@@ -721,11 +723,11 @@ const {
             action: 'add',
             mode: 'give',
           }
-      )
+        )
         let text = i18n[locale].awardDelta
         text = text.replace(/USERNAME/g, getCommentAuthor(parentThing))
-        .replace(/DELTAS/g, flairCount)
-        .replace(/SUBREDDIT/g, subreddit)
+          .replace(/DELTAS/g, flairCount)
+          .replace(/SUBREDDIT/g, subreddit)
         if (query.text.length) query.text += '\n\n'
         query.text += text
         await updateFlair({ name: parentThing.author, flairCount })
@@ -751,20 +753,20 @@ const {
       const comments = await getNewComments()
       _.each(comments, async (entry, index) => {
         const {
-        link_title,
-        link_id,
-        author, body,
-        body_html,
-        edited,
-        parent_id,
-        id,
-        name,
-        author_flair_text,
-        link_url,
-        link_author,
-        created_utc,
-        created,
-      } = entry.data
+          link_title,
+          link_id,
+          author, body,
+          body_html,
+          edited,
+          parent_id,
+          id,
+          name,
+          author_flair_text,
+          link_url,
+          link_author,
+          created_utc,
+          created,
+        } = entry.data
         comments[index] = {
           link_title,
           link_id,
@@ -798,45 +800,45 @@ const {
       console.log('Got unread messages call!')
       if (unreadInboxResponse.error) throw Error(unreadInboxResponse.error)
       const comments = (
-      _(unreadInboxResponse)
-        .get('data.children')
-        .reduce((result, obj) => {
-          if (obj.data.subject.toLowerCase() === 'add') {
-            const commentLinks = (
+        _(unreadInboxResponse)
+          .get('data.children')
+          .reduce((result, obj) => {
+            if (obj.data.subject.toLowerCase() === 'add') {
+              const commentLinks = (
                 _.get(obj, 'data.body')
                   .match(new RegExp(`/r/${subreddit}/comments/[^()[\\]& \n]+`, 'g'))
-            )
-            const fullName = _.get(obj, 'data.name')
-            result.names.push(fullName)
-            result.commentLinks = result.commentLinks.concat(commentLinks)
+              )
+              const fullName = _.get(obj, 'data.name')
+              result.names.push(fullName)
+              result.commentLinks = result.commentLinks.concat(commentLinks)
+              return result
+            }
             return result
-          }
-          return result
-        }, { names: [], commentLinks: [] })
-    )
+          }, { names: [], commentLinks: [] })
+      )
       const deleteCommentLinks = (
-      _(unreadInboxResponse)
-        .get('data.children')
-        .reduce((result, obj) => {
-          if (obj.data.subject.toLowerCase() === 'delete') {
-            const commentLinks = (
+        _(unreadInboxResponse)
+          .get('data.children')
+          .reduce((result, obj) => {
+            if (obj.data.subject.toLowerCase() === 'delete') {
+              const commentLinks = (
                 _.get(obj, 'data.body')
                   .match(new RegExp(`/r/${subreddit}/comments/[^()[\\]& \n]+`, 'g'))
-            )
-            const fullName = _.get(obj, 'data.name')
-            result.names.push(fullName)
-            result.commentLinks = result.commentLinks.concat(commentLinks)
+              )
+              const fullName = _.get(obj, 'data.name')
+              result.names.push(fullName)
+              result.commentLinks = result.commentLinks.concat(commentLinks)
+              return result
+            }
             return result
-          }
-          return result
-        }, { names: [], commentLinks: [] })
-    )
+          }, { names: [], commentLinks: [] })
+      )
       if (deleteCommentLinks.commentLinks.length) {
         deleteCommentLinks.commentLinks = _.uniq(deleteCommentLinks.commentLinks)
         const getParentUserName = async ({ parent_id: parentId }) => {
           const parentComment = await reddit.query(
             `/r/${subreddit}/api/info?${stringify({ id: parentId })}`
-        )
+          )
           return _.get(parentComment, 'data.children[0].data.author')
         }
         for (let i = 0; i < deleteCommentLinks.commentLinks.length; i += 1) {
@@ -845,19 +847,19 @@ const {
             const commentLink = deleteCommentLinks.commentLinks[i].replace(/\/\?context=[\d]+$/i, '')
             const response = await reddit.query(`${commentLink}`)
             const {
-            replies,
-            link_id,
-            author,
-            body,
-            body_html,
-            edited,
-            parent_id,
-            id,
-            name,
-            author_flair_text,
-            created_utc,
-            created,
-          } = _.get(response, '[1].data.children[0].data')
+              replies,
+              link_id,
+              author,
+              body,
+              body_html,
+              edited,
+              parent_id,
+              id,
+              name,
+              author_flair_text,
+              created_utc,
+              created,
+            } = _.get(response, '[1].data.children[0].data')
             const { title: link_title, url: link_url } = _.get(response, '[0].data.children[0].data')
             const comment = {
               link_title,
@@ -889,7 +891,7 @@ const {
                     action: 'remove',
                     mode: 'receive',
                   }
-              )
+                )
                 await updateFlair({ name: parentUserName, flairCount })
                 await addOrRemoveDeltaToOrFromWiki(
                   {
@@ -898,7 +900,7 @@ const {
                     action: 'remove',
                     mode: 'give',
                   }
-              )
+                )
                 // if Delta Log is enabled, delete stuff related to that
                 if (deltaLogEnabled) {
                   // grab the relevant info from the comment
@@ -916,8 +918,8 @@ const {
                     // generate new hidden parameters with the comment data removed
                     const newPostTextHiddenParams = _.cloneDeep(postTextHiddenParams)
                     newPostTextHiddenParams.comments = _.reject(
-                    postTextHiddenParams.comments, { deltaCommentFullName: deltaCommentName }
-                  )
+                      postTextHiddenParams.comments, { deltaCommentFullName: deltaCommentName }
+                    )
 
                     // get arrays of comments from OP and comments
                     const [commentsByOP] = groupCommentsByOp(newPostTextHiddenParams)
@@ -946,9 +948,9 @@ const {
                     } else {
                       // if there are comments, update it
                       updateDeltaLogPostFromHiddenParams(
-                      newPostTextHiddenParams,
-                      deltaLogPostDataJson.deltaLogPostID
-                    )
+                        newPostTextHiddenParams,
+                        deltaLogPostDataJson.deltaLogPostID
+                      )
                     }
 
                     // update the internal wiki database
@@ -977,23 +979,23 @@ const {
             const commentLink = comments.commentLinks[i]
             const response = await reddit.query(`${commentLink}`)
             const {
-            link_id,
-            author,
-            body,
-            body_html,
-            edited,
-            parent_id,
-            id,
-            name,
-            author_flair_text,
-            created_utc,
-            created,
-          } = _.get(response, '[1].data.children[0].data')
+              link_id,
+              author,
+              body,
+              body_html,
+              edited,
+              parent_id,
+              id,
+              name,
+              author_flair_text,
+              created_utc,
+              created,
+            } = _.get(response, '[1].data.children[0].data')
             const {
-            author: link_author,
-            title: link_title,
-            url: link_url,
-          } = _.get(response, '[0].data.children[0].data')
+              author: link_author,
+              title: link_title,
+              url: link_url,
+            } = _.get(response, '[0].data.children[0].data')
             const comment = {
               link_title,
               link_id,
@@ -1014,7 +1016,7 @@ const {
               body_html
                 .replace(/blockquote&gt;[^]*?\/blockquote&gt;/, '')
                 .replace(/pre&gt;[^]*?\/pre&gt;/, '')
-          )
+            )
             if (!!removedBodyHTML.match(/&amp;#8710;|&#8710;|∆|Δ/) ||
             !!removedBodyHTML.match(/!delta/i)) {
               await exports.verifyThenAward(comment)
@@ -1033,14 +1035,14 @@ const {
             body: stringify(
               {
                 id: JSON.stringify(
-                [].concat(
-                  comments.names, deleteCommentLinks.names
-                )
-              ).replace(/"|\[|]/g, ''),
+                  [].concat(
+                    comments.names, deleteCommentLinks.names
+                  )
+                ).replace(/"|\[|]/g, ''),
               }
-          ),
+            ),
           }
-      )
+        )
         if (read.error) throw Error(read.error)
       }
     } catch (err) {
@@ -1091,14 +1093,7 @@ const {
       )
     } catch (err) {
       console.log('Missing credentials for delta-boards! Using base creds as fallback!'.red)
-      try {
-        deltaBoardsCredentials = require(path.resolve('./config/credentials/credentials.json'))
-      } catch (secondErr) {
-        console.log(
-          'Please contact the author for credentials or create your own credentials json!'.red
-        )
-        logCredentialsFile()
-      }
+      deltaBoardsCredentials = require(path.resolve('./config/credentials/credentials.json'))
     }
     /* eslint-enable import/no-unresolved */
     const deltaBoards = new DeltaBoards({

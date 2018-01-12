@@ -127,7 +127,7 @@ class DeltaBoards {
             rank === 1 ?
               `**[${escapeUnderscore(username)}](/r/${subreddit}/wiki/user/${username})**` :
               `[${escapeUnderscore(username)}](/r/${subreddit}/wiki/user/${username})`
-            } | ${deltaCount} |`
+          } | ${deltaCount} |`
         )
       })
       .join('\n')

@@ -55,7 +55,7 @@ const generateDeltaBotCommentFromDeltaComment = async ({
     text: '',
   }
   const json = await reddit.query(
-      `/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`
+    `/r/${subreddit}/comments/${linkID.slice(3)}/?comment=${parentID.slice(3)}`
   )
   if (json.error) throw Error(json.error)
   const parentThing = json[1].data.children[0].data
@@ -64,10 +64,10 @@ const generateDeltaBotCommentFromDeltaComment = async ({
   if ((author.name || author) === botUsername) return true
   hiddenParams.parentUserName = parentThing.author
   if (
-      (
-          !parentID.match(/^t1_/g) ||
+    (
+      !parentID.match(/^t1_/g) ||
           parentThing.author === listing.author
-      ) && bypassOPCheck === false
+    ) && bypassOPCheck === false
   ) {
     console.log(
       `BAILOUT parent author, ${parentThing.author} is listing author, ${listing.author}`
