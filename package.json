@@ -10,6 +10,7 @@
     "start-debug-inspector": "node-debug ./src/index.js --db3-debug --bypass-op-check --enable-delta-log",
     "test": "npm run eslint && jest",
     "eslint": "eslint ./src",
+    "eslint-fix": "eslint ./src --fix",
     "list": "forever list",
     "cleanlogs": "forever cleanlogs",
     "stop": "forever stop production"
