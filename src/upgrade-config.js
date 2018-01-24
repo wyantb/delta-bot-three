@@ -76,7 +76,6 @@ module.exports = async () => {
   if (_.isEqual(configJson, configJsonScaffold)) throwScaffoldConfigError('config.json')
 
   if (exit) process.exit()
-  process.exit()
 
   // look at the module specific configs and change them too if they are legacy configs
   const directoryFileNames = await fs.readdir(path.join(process.cwd(), 'config/credentials'))
