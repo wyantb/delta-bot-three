@@ -415,6 +415,12 @@ const {
     return commentFullName
   }
 
+  const findDeltaLogPost = async linkID =>
+    deltaLogDB.get(linkID).then(
+      _.identity,
+      err => console.error('Failed to find delta log post', err)
+    )
+
   const wasDeltaMadeByAuthor = comment => comment.link_author === getCommentAuthor(comment)
 
   /* Invoked after the DeltaLog post is made */
@@ -430,6 +436,12 @@ const {
     if (!wasDeltaMadeByAuthor(comment)) {
       return true
     }
+    const wikiPostObject = await findDeltaLogPost.get(linkID)
+    if (wikiPostObject == null) {
+      console.error(`Unable to find delta log post for thread ${linkID} - should have been made by findOrMakeDeltaLogPost! Skipping sticky comment creation`)
+      return true
+    }
+
     if (!stickyID) {
       const postComments = await reddit.query(`/r/${subreddit}/comments/${linkID}.json`, true)
       const toplevelReplies = _.get(postComments, '[1].data.children')
@@ -474,7 +486,6 @@ const {
         }),
       },
     })
-    const wikiPostObject = await deltaLogDB.get(linkID)
     wikiPostObject.stickiedCommentID = stickiedCommentID
     await deltaLogDB.put(linkID, wikiPostObject)
     return true
@@ -593,12 +604,6 @@ const {
     await updateDeltaLogPostFromHiddenParams(deltaLogCreationParams, existingPost.deltaLogPostID)
     return deltaLogCreationParams
   }
-
-  const findDeltaLogPost = async linkID =>
-    deltaLogDB.get(linkID).then(
-      _.identity,
-      err => console.error('Failed to find delta log post', err)
-    )
 
   /* Makes delta log posts & updates OP/Other Users sections */
   const deltaLogSubjectTemplate = _.template(i18n[locale].deltaLogTitle)
